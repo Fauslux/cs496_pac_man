@@ -2,7 +2,7 @@ package cs496_pac_man;
 
 import java.util.ArrayList;
 import java.util.Iterator;
-
+import javafx.scene.text.Font;
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
 import javafx.event.EventHandler;
@@ -10,8 +10,10 @@ import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.text.TextAlignment;
 import javafx.stage.Stage;
 
 /**
@@ -69,6 +71,10 @@ public class SetupGame extends Application {
         
         GraphicsContext mapGC = mapCanvas.getGraphicsContext2D();
         GraphicsContext gc = canvas.getGraphicsContext2D();
+        // Text settings in the GraphicsContext
+        // TODO: Change color?
+        gc.setTextAlign(TextAlignment.CENTER);
+        gc.setFont(new Font(16));
         
         // Initializing the TileMap
         TileMap map = new TileMap();
@@ -85,6 +91,8 @@ public class SetupGame extends Application {
         blinky.setImage("blinky_25.png");
         blinky.setPosition(map.INITIALBLINKYLOCATION[map.XCOORDINATE] * TILESIZE,
         					map.INITIALBLINKYLOCATION[map.YCOORDINATE] * TILESIZE);
+        
+        
         
         // Initializing score pellets
         ArrayList<Pellet> pelletList = new ArrayList<Pellet>();
@@ -113,77 +121,10 @@ public class SetupGame extends Application {
                 lastNanoTime.value = currentNanoTime;
                 
                 // game logic
-                // Get the current tile location of Pacman
-                int[] currentPacLocation = getCharacterLocation(pac);
-                //pac.setVelocity(0,0);
-                
-                Movement currentDirection = pac.getDirection();
-                Movement newDirection = Movement.STILL;
-                if (input.contains(Movement.LEFT.getString())) {
-                	pac.moveToLeft("pac_left_25.png");
-                	newDirection = Movement.LEFT;
-                }
-                else if (input.contains(Movement.RIGHT.getString())) {
-                	pac.moveToRight("pac_right_25.png");
-                	newDirection = Movement.RIGHT;
-                }
-                else if (input.contains(Movement.UP.getString())) {
-                	pac.moveToUp("pac_up_25.png");
-                	newDirection = Movement.UP;
-                }
-                else if (input.contains(Movement.DOWN.getString())) {
-                	pac.moveToDown("pac_down_25.png");
-                	newDirection = Movement.DOWN;
-                }
-                
-                // Handle Pacman movement logic   
-                // Pacman cannot move in a direction if the next tile is a wall
-                int nextPacTileValue = map.nextTileValue(currentPacLocation, pac.getDirection());
-                
-                if (nextPacTileValue == TileValue.WALL.getValue()) {
-                	// If the next tile is a wall, Pacman stops moving
-                	pac.stopMove();
-                	pac.setPosition(currentPacLocation[TileMap.XCOORDINATE] * TILESIZE, 
-        							currentPacLocation[TileMap.YCOORDINATE] * TILESIZE);
-                } else {
-                	// If the next tile is available, let Pacman move
-                    // If the current direction and the new direction do NOT match, set Pac on track
-                	if (currentDirection != newDirection && newDirection != Movement.STILL) {
-                    	pac.setPosition(currentPacLocation[TileMap.XCOORDINATE] * TILESIZE, 
-                    					currentPacLocation[TileMap.YCOORDINATE] * TILESIZE);
-                    	pac.setDirection(newDirection);
-                	}
-                }
+                pacmanLogic(input, map, pac);
                 
                 // Handle ghost AI movement logic
-                int[] currentBlinkyLocation = getCharacterLocation(blinky);
-                int nextBlinkyTileValue = map.nextTileValue(currentBlinkyLocation, blinky.getDirection());
-                if (nextBlinkyTileValue == TileValue.WALL.getValue()) {
-                	// If the next tile is a wall, Ghost stops moving
-                	blinky.stopMove();
-                	blinky.setPosition(currentBlinkyLocation[TileMap.XCOORDINATE] * TILESIZE, 
-        								currentBlinkyLocation[TileMap.YCOORDINATE] * TILESIZE);
-                }
-                
-                // If the ghost is standing still, it should pick a direction to move
-                if (blinky.shouldChange()) {
-                	int leftTileValue = map.nextTileValue(currentBlinkyLocation, Movement.LEFT);
-                	int rightTileValue = map.nextTileValue(currentBlinkyLocation, Movement.RIGHT);
-                	int upTileValue = map.nextTileValue(currentBlinkyLocation, Movement.UP);
-                	int downTileValue = map.nextTileValue(currentBlinkyLocation, Movement.DOWN);
-                	
-                	Movement newBlinkyDirection = blinky.decideMove(leftTileValue, rightTileValue, 
-                													upTileValue, downTileValue);
-                	if (newBlinkyDirection == Movement.LEFT) {
-                		blinky.moveToLeft("blinky_25.png");
-                	} else if (newBlinkyDirection == Movement.RIGHT) {
-                		blinky.moveToRight("blinky_25.png");
-                	} else if (newBlinkyDirection == Movement.UP) {
-                		blinky.moveToUp("blinky_25.png");
-                	} else if (newBlinkyDirection == Movement.DOWN) {
-                		blinky.moveToDown("blinky_25.png");
-                	}
-                }
+                blinkyLogicAI(map, blinky);
                 
                 // Update game characters
                 pac.update(elapsedTime);
@@ -210,13 +151,22 @@ public class SetupGame extends Application {
                 gc.clearRect(0, 0, TILESIZE * TileMap.HORIZONTALTILES, TILESIZE * TileMap.VERTICALTILES);
                 pac.render(gc);
                 blinky.render(gc);
-                
                 for (Sprite pellet : pelletList )
                 	pellet.render( gc );
 
-                String pointsText = "Score: $" + (100 * score.getValue());
+                // Update the score text
+                String pointsText = "Score: " + (100 * score.getValue());
                 gc.fillText( pointsText, 360, 15);
                 gc.strokeText( pointsText, 360, 15);
+                
+                // GAME END LOGIC
+                // If Pacman touches a ghost, the game will end and the AnimationTimer stops
+                // TODO: Check for intersections when there are more ghosts (array of ghosts?)
+                if (pac.intersects(blinky)) {
+                	gc.fillText("GAME OVER", (TILESIZE * TileMap.HORIZONTALTILES)/2, 
+                							(TILESIZE * TileMap.VERTICALTILES)/2);
+                	this.stop();
+                }
             }
             
         }.start();
@@ -225,6 +175,92 @@ public class SetupGame extends Application {
         renderTiles(map.getMap(), mapGC);
 
         theStage.show();
+    }
+    
+    /**
+     * The movement logic for Pacman
+     * @param input an ArrayList of Strings that holds the user's input
+     * @param map the TileMap of the map
+     * @param pac the Pacman object 
+     */
+    public void pacmanLogic(ArrayList<String> input, TileMap map, Pacman pac) {
+    	// Get the current tile location of Pacman
+        int[] currentPacLocation = getCharacterLocation(pac);
+        
+        // Get Pacman's direction and move him 
+        Movement currentDirection = pac.getDirection();
+        Movement newDirection = Movement.STILL;
+        if (input.contains(Movement.LEFT.getString())) {
+        	pac.moveToLeft("pac_left_25.png");
+        	newDirection = Movement.LEFT;
+        }
+        else if (input.contains(Movement.RIGHT.getString())) {
+        	pac.moveToRight("pac_right_25.png");
+        	newDirection = Movement.RIGHT;
+        }
+        else if (input.contains(Movement.UP.getString())) {
+        	pac.moveToUp("pac_up_25.png");
+        	newDirection = Movement.UP;
+        }
+        else if (input.contains(Movement.DOWN.getString())) {
+        	pac.moveToDown("pac_down_25.png");
+        	newDirection = Movement.DOWN;
+        }
+        
+        // Handle Pacman movement logic   
+        // Pacman cannot move in a direction if the next tile in that direction is a wall
+        int nextPacTileValue = map.nextTileValue(currentPacLocation, pac.getDirection());
+        if (nextPacTileValue == TileValue.WALL.getValue()) {
+        	// If the next tile is a wall, Pacman stops moving
+        	pac.stopMove();
+        	pac.setPosition(currentPacLocation[TileMap.XCOORDINATE] * TILESIZE, 
+							currentPacLocation[TileMap.YCOORDINATE] * TILESIZE);
+        } else {
+        	// If the next tile is available, let Pacman move
+            // If the current direction and the new direction do NOT match, set Pac on track
+        	if (currentDirection != newDirection && newDirection != Movement.STILL) {
+            	pac.setPosition(currentPacLocation[TileMap.XCOORDINATE] * TILESIZE, 
+            					currentPacLocation[TileMap.YCOORDINATE] * TILESIZE);
+            	pac.setDirection(newDirection);
+        	}
+        }
+    }
+    
+    /**
+     * Logic for handling Blinky's AI movement
+     * @param map the TileMap of the map
+     * @param blinky the AI of the Blinky ghost
+     */
+    public void blinkyLogicAI(TileMap map, BlinkyAI blinky) {
+    	// Handle ghost AI movement logic
+        int[] currentBlinkyLocation = getCharacterLocation(blinky);
+        int nextBlinkyTileValue = map.nextTileValue(currentBlinkyLocation, blinky.getDirection());
+        if (nextBlinkyTileValue == TileValue.WALL.getValue()) {
+        	// If the next tile is a wall, Ghost stops moving
+        	blinky.stopMove();
+        	blinky.setPosition(currentBlinkyLocation[TileMap.XCOORDINATE] * TILESIZE, 
+								currentBlinkyLocation[TileMap.YCOORDINATE] * TILESIZE);
+        }
+        
+        // If the ghost is standing still, it should pick a direction to move
+        if (blinky.shouldChange()) {
+        	int leftTileValue = map.nextTileValue(currentBlinkyLocation, Movement.LEFT);
+        	int rightTileValue = map.nextTileValue(currentBlinkyLocation, Movement.RIGHT);
+        	int upTileValue = map.nextTileValue(currentBlinkyLocation, Movement.UP);
+        	int downTileValue = map.nextTileValue(currentBlinkyLocation, Movement.DOWN);
+        	
+        	Movement newBlinkyDirection = blinky.decideMove(leftTileValue, rightTileValue, 
+        													upTileValue, downTileValue);
+        	if (newBlinkyDirection == Movement.LEFT) {
+        		blinky.moveToLeft("blinky_25.png");
+        	} else if (newBlinkyDirection == Movement.RIGHT) {
+        		blinky.moveToRight("blinky_25.png");
+        	} else if (newBlinkyDirection == Movement.UP) {
+        		blinky.moveToUp("blinky_25.png");
+        	} else if (newBlinkyDirection == Movement.DOWN) {
+        		blinky.moveToDown("blinky_25.png");
+        	}
+        }
     }
     
     /**
@@ -246,14 +282,20 @@ public class SetupGame extends Application {
     
     /**
      * Helper method used to render tiles in the matrix
+     * @param map A matrix of integers that represents the map
+     * @param gc the GraphicsContext to render the tiles on
      */
     private void renderTiles(int[][] map, GraphicsContext gc) {
+    	// Create a new tile to render for every point in the matrix
     	for (int y = 0; y < TileMap.VERTICALTILES; y++) {
     		for (int x = 0; x < TileMap.HORIZONTALTILES; x++) {
     			int tileValue = map[y][x];
+    			
     			// Create a new Tile and render it
     			Tile tile = new Tile();
     			tile.setPosition(x*TILESIZE, y*TILESIZE);
+    			// If the tile is a wall, give it the wall space image
+    			// If the tile is empty or a pellet, give it the empty space image
     			if (tileValue == TileValue.WALL.getValue()) {
     				tile.setImage("wall_20.png");
     			} else {

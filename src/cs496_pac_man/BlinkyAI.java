@@ -9,17 +9,7 @@ import java.util.Random;
  *
  */
 public class BlinkyAI extends Ghost {
-	
-	
-	// Used to determine if the ghost AI can move left
-	private boolean leftAvailable;
-	// Used to determine if the ghost AI can move right
-	private boolean rightAvailable;
-	// Used to determine if the ghost AI can move up
-	private boolean upAvailable;
-	// Used to determine if the ghost AI can move down
-	private boolean downAvailable;
-	
+
 	/**
 	 * Method used to determine if the Ghost should move (when the ghost has stopped moving
 	 */

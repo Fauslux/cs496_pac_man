@@ -8,6 +8,8 @@ package cs496_pac_man;
 public class Pacman extends GameCharacter {
 	// The default movement speed of Pacman
 	private final int PACSPEED = 100;
+	// Field that holds whether Pacman is dead or not
+	private boolean isDead;
 	
 	/**
 	 * Constructor for a Pacman object
@@ -16,8 +18,24 @@ public class Pacman extends GameCharacter {
 		super();
 		this.setDirection(Movement.STILL);
 		this.setMoveSpeed(PACSPEED);
+		this.isDead = false;
 	}
 	
+	/**
+	 * Returns the value that determines if Pacman is dead
+	 * @return the value that determines if Pacman is dead
+	 */
+	public boolean getIsDead() {
+		return this.isDead;
+	}
+	
+	/**
+	 * Set the the vlaue of the boolean that determines if Pacman is dead
+	 * @param isDead the new value of death
+	 */
+	public void setIsDead(boolean isDead) {
+		this.isDead = isDead;
+	}
 	
 
 
