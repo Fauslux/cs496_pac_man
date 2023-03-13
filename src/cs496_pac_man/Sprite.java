@@ -1,14 +1,20 @@
 package cs496_pac_man;
 
+
 import javafx.geometry.Rectangle2D;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.Image;
 
+/**
+ * This class represents a sprite (visual part) used in the game
+ * @author Kevin Richardson
+ * @version March 2023
+ */
 public abstract class Sprite {
-
+	
 	private Image image;
-	private double positionX;
-	private double positionY;
+	public double positionX;
+	public double positionY;
 	private double velocityX;
 	private double velocityY;
 	private double width;
@@ -27,10 +33,12 @@ public abstract class Sprite {
 		height = i.getHeight();
 	}
 	
+	
 	public void setImage(String filename) {
 		Image localImage = new Image(filename);
 		setImage(localImage);
 	}
+	
 	
 	public void setPosition(double x, double y) {
 		positionX = x;
@@ -62,6 +70,10 @@ public abstract class Sprite {
 	
 	public boolean intersects(Sprite s) {
 		return s.getBoundary().intersects(this.getBoundary());
+	}
+	
+	public void hide() {
+		this.image = null;
 	}
 	
 	public String toString() {
