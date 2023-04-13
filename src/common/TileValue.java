@@ -1,4 +1,4 @@
-package cs496_pac_man;
+package common;
 
 /**
  * This enumeration represents a tile's value in the map. As of this version, there are 
@@ -35,5 +35,6 @@ public enum TileValue {
 		
 		return result;
 	}
+	
 	
 }

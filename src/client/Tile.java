@@ -1,4 +1,4 @@
-package cs496_pac_man;
+package client;
 
 /**
  * This class represents visual tiles that will be used to represent the TileMap

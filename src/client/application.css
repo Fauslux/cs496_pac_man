@@ -1,0 +1,4 @@
+/** Background color for the pregame screen */
+.bgColor {
+	-fx-background-color: linear-gradient(#f5eb67 0%, #f1f1f1 50%, #d462e3 100%); 
+}

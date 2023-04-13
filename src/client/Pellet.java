@@ -1,4 +1,4 @@
-package cs496_pac_man;
+package client;
 
 public class Pellet extends Sprite {
 	// Boolean that determines if the pellet has been eaten by Pac-Man

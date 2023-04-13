@@ -1,4 +1,4 @@
-package cs496_pac_man;
+package client;
 
 public abstract class VisibleObject extends Sprite {
 	public abstract void moveToLeft();

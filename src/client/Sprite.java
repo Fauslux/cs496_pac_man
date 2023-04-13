@@ -1,4 +1,4 @@
-package cs496_pac_man;
+package client;
 
 
 import javafx.geometry.Rectangle2D;
@@ -29,8 +29,8 @@ public abstract class Sprite {
 	
 	public void setImage(Image i) {
 		image = i;
-		width = i.getWidth();
-		height = i.getHeight();
+		width = i.getWidth()/2;
+		height = i.getHeight()/2;
 	}
 	
 	
@@ -69,6 +69,7 @@ public abstract class Sprite {
 	}
 	
 	public boolean intersects(Sprite s) {
+		//TODO: check for different intersection capabilities
 		return s.getBoundary().intersects(this.getBoundary());
 	}
 	

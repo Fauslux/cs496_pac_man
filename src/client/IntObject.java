@@ -1,4 +1,4 @@
-package cs496_pac_man;
+package client;
 
 public class IntObject
 {
@@ -15,5 +15,9 @@ public class IntObject
     
     public int getValue() {
     	return this.value;
+    }
+    
+    public void setValue(int value) {
+    	this.value = value;
     }
 }

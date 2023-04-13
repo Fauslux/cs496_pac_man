@@ -1,7 +1,10 @@
-package cs496_pac_man;
+package client;
 
 import java.util.ArrayList;
 import java.util.Random;
+
+import common.Movement;
+import common.TileValue;
 
 /**
  * This class represents an AI for the ghost to manuever around the map

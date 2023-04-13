@@ -7,5 +7,5 @@ module cs496_pac_man {
 	requires java.logging;
 	requires javafx.web;
 	
-	opens cs496_pac_man;
+	opens client;
 }

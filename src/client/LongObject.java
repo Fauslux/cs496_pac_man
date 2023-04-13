@@ -1,4 +1,4 @@
-package cs496_pac_man;
+package client;
 
 public class LongObject
 {

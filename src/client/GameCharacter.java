@@ -1,4 +1,6 @@
-package cs496_pac_man;
+package client;
+
+import common.Movement;
 
 /**
  * This class is used to define specific methods for Pacman game characters
@@ -11,6 +13,13 @@ public class GameCharacter extends Sprite {
 	private int moveSpeed;
 	// This field will hold Pacman's current moving direction
 	private Movement currentDirection;
+	// This field holds the image name that will be used to change the Sprite
+	private String imgName;
+	
+	public GameCharacter(String imgName) {
+		super();
+		this.imgName = imgName;
+	}
 	
 	/**
 	 * Method used to stop the character from moving
@@ -59,6 +68,31 @@ public class GameCharacter extends Sprite {
 		this.setVelocity(0, moveSpeed);
     	this.setImage(imgFileName);
 	}
+	
+	/**
+	 * Method used to move with a given direction
+	 * @param direction The direction to move
+	 * @param posY The y position 
+	 * @param posX The x position
+	 */
+	public void movement(Movement direction, int posY, int posX) {
+		this.setPosition(posX, posY);
+		
+		switch(direction) {
+		case UP:
+			this.moveToUp(imgName);
+			break;
+		case DOWN:
+			this.moveToDown(imgName);
+			break;
+		case LEFT:
+			this.moveToLeft(imgName);
+			break;
+		case RIGHT:
+			this.moveToRight(imgName);
+			break;
+		}
+	}
 
 	/**
 	 * Returns the current Movement direction of the character
@@ -82,5 +116,9 @@ public class GameCharacter extends Sprite {
 	 */
 	public void setMoveSpeed(int movespeed) {
 		this.moveSpeed = movespeed;
+	}
+	
+	public String toString() {
+		return imgName;
 	}
 }

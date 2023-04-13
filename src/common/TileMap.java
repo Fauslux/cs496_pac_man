@@ -1,4 +1,4 @@
-package cs496_pac_man;
+package common;
 
 /**
  * This class represents the map that will be used in Pac-Man. The map is 28 by 31 tiles, 
@@ -18,9 +18,9 @@ public class TileMap {
 	// The index of the x-coordinate in location arrays.
 	public final static int XCOORDINATE = 1;
 	// The initial/starting location of Pacman as an array of 2 integers.
-	public final int[] INITIALPACLOCATION = {23, 13};
+	public final static int[] INITIALPACLOCATION = {23, 13};
 	// The initial/starting location of Blinky as an array of 2 integers.
-	public final int[] INITIALBLINKYLOCATION = {14, 9};
+	public final static int[] INITIALBLINKYLOCATION = {14, 9};
 	
 	// The location of Pacman as an array.
 	private int[] pacmanLocation;

@@ -1,4 +1,6 @@
-package cs496_pac_man;
+package client;
+
+import common.Movement;
 
 /**
  * This class represents the Pacman game character 
@@ -8,6 +10,8 @@ package cs496_pac_man;
 public class Pacman extends GameCharacter {
 	// The default movement speed of Pacman
 	private final int PACSPEED = 100;
+	// The name of Pacman images
+	private static final String pacImg = "pac";
 	// Field that holds whether Pacman is dead or not
 	private boolean isDead;
 	
@@ -15,7 +19,7 @@ public class Pacman extends GameCharacter {
 	 * Constructor for a Pacman object
 	 */
 	public Pacman() {
-		super();
+		super(pacImg);
 		this.setDirection(Movement.STILL);
 		this.setMoveSpeed(PACSPEED);
 		this.isDead = false;

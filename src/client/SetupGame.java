@@ -1,7 +1,11 @@
-package cs496_pac_man;
+package client;
 
 import java.util.ArrayList;
 import java.util.Iterator;
+
+import common.Movement;
+import common.TileMap;
+import common.TileValue;
 import javafx.scene.text.Font;
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
@@ -13,6 +17,7 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.paint.Color;
 import javafx.scene.text.TextAlignment;
 import javafx.stage.Stage;
 
@@ -25,11 +30,16 @@ import javafx.stage.Stage;
 
 public class SetupGame extends Application {
 	
-	// This constant represent the size of a square tile (width and height), translating the
+	// This constant represents the size of a square tile (width and height), translating the
 	// tiles in the TileMap to a GUI.
-	private final int TILESIZE = 20;
-
+	private static final int TILESIZE = 20;
+	// This field holds the current score of Pac-Man
+	private IntObject score;
 	
+	/**
+	 * Main method for SetupGame, launches the GUI
+	 * @param args String list of arguments
+	 */
 	public static void main(String[] args) {
         launch(args);
     }
@@ -44,11 +54,9 @@ public class SetupGame extends Application {
         Canvas mapCanvas = new Canvas(TILESIZE * TileMap.HORIZONTALTILES, TILESIZE * TileMap.VERTICALTILES);
         theStage.setScene(scene);
         root.getChildren().add(mapCanvas);
-
         root.getChildren().add(canvas);
+        
         ArrayList<String> input = new ArrayList<String>();     
-        
-        
         scene.setOnKeyPressed(
         	new EventHandler<KeyEvent>(){
         		@Override
@@ -58,23 +66,23 @@ public class SetupGame extends Application {
         				input.add(code);
         		}
         	});
-        
         scene.setOnKeyReleased(
-            	new EventHandler<KeyEvent>() {
-            		@Override
-            		public void handle(KeyEvent e) {
-            			String code = e.getCode().toString();
-            			input.remove(code);
-            				
-            		}
-            	});
+        	new EventHandler<KeyEvent>() {
+        		@Override
+        		public void handle(KeyEvent e) {
+        			String code = e.getCode().toString();
+        			input.remove(code);
+        		}
+        	}
+		);
         
         GraphicsContext mapGC = mapCanvas.getGraphicsContext2D();
         GraphicsContext gc = canvas.getGraphicsContext2D();
         // Text settings in the GraphicsContext
-        // TODO: Change color?
         gc.setTextAlign(TextAlignment.CENTER);
         gc.setFont(new Font(16));
+        gc.setStroke(Color.WHITE);
+        gc.setFill(Color.WHITE);
         
         // Initializing the TileMap
         TileMap map = new TileMap();
@@ -83,52 +91,66 @@ public class SetupGame extends Application {
         Pacman pac = new Pacman();
         pac.setImage("pac_left_25.png");
         // Set the position of Pacman using his initial location in the TileMap
-        pac.setPosition(map.INITIALPACLOCATION[map.XCOORDINATE] * TILESIZE,
-        					map.INITIALPACLOCATION[map.YCOORDINATE] * TILESIZE);
+        pac.setPosition(TileMap.INITIALPACLOCATION[map.XCOORDINATE] * TILESIZE,
+        					TileMap.INITIALPACLOCATION[map.YCOORDINATE] * TILESIZE);
         
+        //Initializing ghosts
+        ArrayList<Ghost> ghosts = new ArrayList<Ghost>();
         // Initializing Blinky
         BlinkyAI blinky = new BlinkyAI();
         blinky.setImage("blinky_25.png");
         blinky.setPosition(map.INITIALBLINKYLOCATION[map.XCOORDINATE] * TILESIZE,
         					map.INITIALBLINKYLOCATION[map.YCOORDINATE] * TILESIZE);
-        
-        
-        
-        // Initializing score pellets
-        ArrayList<Pellet> pelletList = new ArrayList<Pellet>();
-        // Go through the tile map and if there is 1, put a pellet there
-        for (int y = 0; y < TileMap.VERTICALTILES; y++) {
-        	for (int x = 0; x < TileMap.HORIZONTALTILES; x++) {
-        		if (map.getMap()[y][x] == TileValue.PELLET.getValue()) {
-        			Pellet pellets = new Pellet(false);
-                    pellets.setImage("pellet_20.png");     
-                    pellets.setPosition(x * TILESIZE, y * TILESIZE);
-                    pelletList.add( pellets );
-        		}   		
-        	}     	
-        }
+        ghosts.add(blinky);
         
         //https://github.com/tutsplus/Introduction-to-JavaFX-for-Game-Development/blob/master/Example5.java
-        LongObject lastNanoTime = new LongObject(System.nanoTime());
-        IntObject score = new IntObject(0);
-
-        new AnimationTimer()
+        // Initialize the score
+        score = new IntObject(0);
+        
+        theStage.show();
+        
+        // Render the map tiles on a GraphicsContext separate from the pellets and characters
+        renderTiles(map.getMap(), mapGC);
+        // Start the game loop
+        gameLoop(map, input, gc, pac, ghosts);
+        
+    }
+    
+    
+    public boolean gameLoop(TileMap map, ArrayList<String> input, GraphicsContext gc, Pacman pac, ArrayList<Ghost> ghosts) {
+    	//Generate pellets
+    	ArrayList<Pellet> pelletList = generatePellets(map);
+    	LongObject lastNanoTime = new LongObject(System.nanoTime());
+    	boolean pacDied = false;
+    	
+    	new AnimationTimer()
         {
             public void handle(long currentNanoTime)
             {
                 // calculate time since last update.
                 double elapsedTime = (currentNanoTime - lastNanoTime.value) / 1000000000.0;
                 lastNanoTime.value = currentNanoTime;
-                
+                                
                 // game logic
                 pacmanLogic(input, map, pac);
                 
                 // Handle ghost AI movement logic
-                blinkyLogicAI(map, blinky);
+                Iterator<Ghost> ghostMoveIter = ghosts.iterator();
+                while (ghostMoveIter.hasNext()) {
+                	Ghost currentGhost = ghostMoveIter.next();
+                	if (currentGhost.getClass() == BlinkyAI.class) {
+                    	blinkyLogicAI(map, (BlinkyAI) currentGhost);
+                	}
+                }
+                //blinkyLogicAI(map, blinky);
                 
                 // Update game characters
                 pac.update(elapsedTime);
-                blinky.update(elapsedTime);
+                Iterator<Ghost> ghostUpdIter = ghosts.iterator();
+                while (ghostUpdIter.hasNext()) {
+                	Ghost currentGhost = ghostUpdIter.next();
+                    currentGhost.update(elapsedTime);
+                }
                                 
                 // collision detection
                 Iterator<Pellet> pelletListIter = pelletList.iterator();
@@ -149,32 +171,64 @@ public class SetupGame extends Application {
                 
                 // Render the game objects
                 gc.clearRect(0, 0, TILESIZE * TileMap.HORIZONTALTILES, TILESIZE * TileMap.VERTICALTILES);
-                pac.render(gc);
-                blinky.render(gc);
                 for (Sprite pellet : pelletList )
-                	pellet.render( gc );
+                	pellet.render(gc);
+                pac.render(gc);
+                Iterator<Ghost> ghostRenderIter = ghosts.iterator();
+                while (ghostRenderIter.hasNext()) {
+                	Ghost currentGhost = ghostRenderIter.next();
+                	currentGhost.render(gc);
+                }
 
                 // Update the score text
                 String pointsText = "Score: " + (100 * score.getValue());
                 gc.fillText( pointsText, 360, 15);
                 gc.strokeText( pointsText, 360, 15);
                 
+                
                 // GAME END LOGIC
                 // If Pacman touches a ghost, the game will end and the AnimationTimer stops
                 // TODO: Check for intersections when there are more ghosts (array of ghosts?)
-                if (pac.intersects(blinky)) {
-                	gc.fillText("GAME OVER", (TILESIZE * TileMap.HORIZONTALTILES)/2, 
-                							(TILESIZE * TileMap.VERTICALTILES)/2);
-                	this.stop();
+                Iterator<Ghost> ghostCollIter = ghosts.iterator();
+                while (ghostCollIter.hasNext()) {
+                	Ghost currentGhost = ghostCollIter.next();
+                	if (pac.intersects(currentGhost)) {
+                    	gc.fillText("GAME OVER", (TILESIZE * TileMap.HORIZONTALTILES)/2, 
+                    							(TILESIZE * TileMap.VERTICALTILES)/2);
+                    	gc.strokeText("GAME OVER", (TILESIZE * TileMap.HORIZONTALTILES)/2, 
+    							(TILESIZE * TileMap.VERTICALTILES)/2);
+                    	// TODO: Add lives system, check for game over
+                    	this.stop();
+                    }
                 }
+                
             }
-            
         }.start();
-        
-        // Render the map tiles on a GraphicsContext separate from the pellets and characters
-        renderTiles(map.getMap(), mapGC);
 
-        theStage.show();
+        System.out.println("hi");
+        return pacDied;
+    }
+    
+    /**
+     * Helper method used to generate pellets according to the TileMap object
+     * @param map
+     * @return
+     */
+    public ArrayList<Pellet> generatePellets(TileMap map) {
+    	// Initializing score pellets
+        ArrayList<Pellet> pelletList = new ArrayList<Pellet>();
+        // Go through the tile map and if there is 1, put a pellet there
+        for (int y = 0; y < TileMap.VERTICALTILES; y++) {
+        	for (int x = 0; x < TileMap.HORIZONTALTILES; x++) {
+        		if (map.getMap()[y][x] == TileValue.PELLET.getValue()) {
+        			Pellet pellets = new Pellet(false);
+                    pellets.setImage("pellet_20.png");     
+                    pellets.setPosition(x * TILESIZE, y * TILESIZE);
+                    pelletList.add( pellets );
+        		}
+        	}
+        }
+        return pelletList;
     }
     
     /**
@@ -219,7 +273,7 @@ public class SetupGame extends Application {
         	// If the next tile is available, let Pacman move
             // If the current direction and the new direction do NOT match, set Pac on track
         	if (currentDirection != newDirection && newDirection != Movement.STILL) {
-            	pac.setPosition(currentPacLocation[TileMap.XCOORDINATE] * TILESIZE, 
+        		pac.setPosition(currentPacLocation[TileMap.XCOORDINATE] * TILESIZE, 
             					currentPacLocation[TileMap.YCOORDINATE] * TILESIZE);
             	pac.setDirection(newDirection);
         	}
