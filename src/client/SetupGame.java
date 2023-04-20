@@ -97,11 +97,32 @@ public class SetupGame extends Application {
         //Initializing ghosts
         ArrayList<Ghost> ghosts = new ArrayList<Ghost>();
         // Initializing Blinky
-        BlinkyAI blinky = new BlinkyAI();
+        BlinkyAI blinky = new BlinkyAI("blinky");
         blinky.setImage("blinky_25.png");
         blinky.setPosition(map.INITIALBLINKYLOCATION[map.XCOORDINATE] * TILESIZE,
         					map.INITIALBLINKYLOCATION[map.YCOORDINATE] * TILESIZE);
         ghosts.add(blinky);
+        
+        BlinkyAI blinky2 = new BlinkyAI("blinky");
+        blinky2.setImage("blinky_25.png");
+        blinky2.setPosition(map.INITIALPINKYLOCATION[map.XCOORDINATE] * TILESIZE,
+        					map.INITIALPINKYLOCATION[map.YCOORDINATE] * TILESIZE);
+        ghosts.add(blinky2);
+        
+        
+        BlinkyAI blinky3 = new BlinkyAI("blinky");
+        blinky3.setImage("blinky_25.png");
+        blinky3.setPosition(map.INITIALINKYLOCATION[map.XCOORDINATE] * TILESIZE,
+        					map.INITIALINKYLOCATION[map.YCOORDINATE] * TILESIZE);
+        ghosts.add(blinky3);
+        
+        BlinkyAI blinky4 = new BlinkyAI("blinky");
+        blinky4.setImage("blinky_25.png");
+        blinky4.setPosition(map.INITIALCLYDELOCATION[map.XCOORDINATE] * TILESIZE,
+        					map.INITIALCLYDELOCATION[map.YCOORDINATE] * TILESIZE);
+        ghosts.add(blinky4);
+        
+        
         
         //https://github.com/tutsplus/Introduction-to-JavaFX-for-Game-Development/blob/master/Example5.java
         // Initialize the score

@@ -20,7 +20,14 @@ public class TileMap {
 	// The initial/starting location of Pacman as an array of 2 integers.
 	public final static int[] INITIALPACLOCATION = {23, 13};
 	// The initial/starting location of Blinky as an array of 2 integers.
-	public final static int[] INITIALBLINKYLOCATION = {14, 9};
+	public final static int[] INITIALBLINKYLOCATION = {11, 13};
+	// The initial/starting location of Blinky as an array of 2 integers.
+	public final static int[] INITIALPINKYLOCATION = {14, 9};
+	// The initial/starting location of Blinky as an array of 2 integers.
+	public final static int[] INITIALINKYLOCATION = {17, 13};
+	// The initial/starting location of Blinky as an array of 2 integers.
+	public final static int[] INITIALCLYDELOCATION = {14, 17};
+
 	
 	// The location of Pacman as an array.
 	private int[] pacmanLocation;

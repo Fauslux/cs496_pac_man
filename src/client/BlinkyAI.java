@@ -12,7 +12,13 @@ import common.TileValue;
  *
  */
 public class BlinkyAI extends Ghost {
-
+	/**
+	 * Constructor for a BlinkyAI object
+	 */
+	public BlinkyAI(String imgName) {
+		super(imgName);
+	}
+	
 	/**
 	 * Method used to determine if the Ghost should move (when the ghost has stopped moving
 	 */

@@ -140,9 +140,9 @@ public class PacmanServer implements MessageListener {
         	System.out.println("Up KeyCode: " + "");
         	Movement direction = getMovementUsingID(keyID);
         	// moveArray[1] is the client character's x tile position
-        	int posX = Integer.parseInt(moveArray[1]);
+        	int posY = Integer.parseInt(moveArray[1]);
         	// moveArray[2] is the client character's y tile position
-        	int posY = Integer.parseInt(moveArray[2]);
+        	int posX = Integer.parseInt(moveArray[2]);
         	
         	if (validateMove(direction, posX, posY)) {
         		broadcast("move:" + clientCharacter.getID() + " " + options + " ");
@@ -153,7 +153,7 @@ public class PacmanServer implements MessageListener {
         			clientCharacter.equals(Characters.PACMAN)) {
         	// If Pacman collects a pellet, update everyone's score
         	this.score += 100;
-        	broadcast("updatescore:" + this.score);
+        	broadcast("pelletcollected:" + options + " ");
         } else if (command.contains("ready")) {
         	// If the player has indicated they are ready, set their ready status
         	this.clientReady.replace(clientAgent, true);
@@ -181,15 +181,25 @@ public class PacmanServer implements MessageListener {
         }
 	}
 	
+	/**
+	 * Used to validate a move of a client's character based on their input direction and position
+	 * @param direction The direction that the client wants their character to move
+	 * @param posX The X value of the client character's position in the map
+	 * @param posY The Y value of the client character's position in the map
+	 * @return true if the move is valid
+	 */
 	private boolean validateMove(Movement direction, int posX, int posY) {
 		boolean result = true;
-		// Get the value of the next tile using a current tile
-		int[] currentTile = {posY, posX};
-		int nextTileValue = tileMap.nextTileValue(currentTile, direction);
-		// If the next tile is a wall, then the move is not valid
-		if (nextTileValue == TileValue.WALL.getValue()) {
-			result = false;
-		}
+		// If the direction to be moved is not staying still, check if it's a valid move
+		if (direction != Movement.STILL) {
+			// Get the value of the next tile using a current tile
+			int[] currentTile = {posY, posX};
+			int nextTileValue = tileMap.nextTileValue(currentTile, direction);
+			// If the next tile is a wall, then the move is not valid
+			if (nextTileValue == TileValue.WALL.getValue()) {
+				result = false;
+			}
+		}	
 		
 		return result;
 	}
@@ -227,7 +237,6 @@ public class PacmanServer implements MessageListener {
 		Movement movement = null;
 		
 		if (id == Movement.UP.getValue()) {
-			System.out.println("Movement UP");
 			movement = Movement.UP;
 		} else if (id == Movement.DOWN.getValue()) {
 			movement = Movement.DOWN;
@@ -238,9 +247,7 @@ public class PacmanServer implements MessageListener {
 		} else if (id == Movement.STILL.getValue()) {
 			movement = Movement.STILL;
 		} 
-		
-		System.out.println("Movement is: " + movement);
-				
+						
 		return movement;
 	}
 }

@@ -2,6 +2,7 @@ package client;
 
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.ListIterator;
 
 import common.Characters;
 import common.Movement;
@@ -122,15 +123,13 @@ public class PacmanClientGUI extends Application implements ConsoleListener {
         	new EventHandler<KeyEvent>(){
         		@Override
         		public void handle(KeyEvent e) {
-        			
-        			// !!!!! TODO: Change so that only the KeyCode is being used instead of String
-        			
-        			int code = e.getCode().getCode();
+              			int code = e.getCode().getCode();
 
         			if(validKey(e.getCode()) && !input.contains(code)) {
         				// If the current input is valid and not registered, add to input list
         				// and send that input to the server
-        				input.add(code);        				
+        				input.add(code);      
+        				Movement direction = getMovementUsingCode(code);
         				
         				GameCharacter gameChar = null;
 
@@ -140,7 +139,6 @@ public class PacmanClientGUI extends Application implements ConsoleListener {
         					break;
         				case BLINKY:
         					gameChar = blinky;
-        					System.out.println("gameChar is blinky");
         					break;
         				case PINKY:
         					gameChar = pinky;
@@ -152,11 +150,12 @@ public class PacmanClientGUI extends Application implements ConsoleListener {
         					gameChar = clyde;
         					break;
         				}
+        				
         				System.out.println("character in input: " + gameChar);
         				// If the character isn't already moving in a certain direction, 
         				// tell server new direction (and current coordinates)
-        				if (gameChar.getDirection() != getMovementUsingID(code)) {
-        					sendMovement(gameChar, code);
+        				if (gameChar.getDirection() != direction) {
+        					sendMovement(gameChar, direction.getValue());
         				}
         			}	
         		}
@@ -181,6 +180,8 @@ public class PacmanClientGUI extends Application implements ConsoleListener {
 	
 	/**
 	 * Method used to send the client character's location to the server
+	 * @param character The GameCharacter to send movement of (need tile position)
+	 * @param directionCode The ID of the Movement direction
 	 */
 	private void sendMovement(GameCharacter character, int directionCode) {        
     	int[] tilePosition = getCharacterLocation(character);
@@ -204,7 +205,6 @@ public class PacmanClientGUI extends Application implements ConsoleListener {
 			break;
 		case BLINKY:
 			gameChar = this.blinky;
-			System.out.println("gameChar is blinky");
 			break;
 		case PINKY:
 			gameChar = this.pinky;
@@ -292,9 +292,9 @@ public class PacmanClientGUI extends Application implements ConsoleListener {
 			// moveArray[1] is the ID of the movement direction
 			Movement direction = getMovementUsingID(Integer.parseInt(moveArray[1]));
 			// moveArray[2] is the Y coordinate
-			int posY = Integer.parseInt(moveArray[2]);
+			int posY = Integer.parseInt(moveArray[2]) * TILESIZE;
 			// moveArray[3] is the X coordinate
-			int posX = Integer.parseInt(moveArray[3]);
+			int posX = Integer.parseInt(moveArray[3]) * TILESIZE;
 			
 			// Change character movement based on received information
 			switch (moveCharacter) {
@@ -326,9 +326,14 @@ public class PacmanClientGUI extends Application implements ConsoleListener {
 			// !!!!! TODO: Get direction (and coordinates?) from server.
 			//pac.moveToLeft("pac_left_25.png");
 			
-		} else if (command.contains("updatescore")) {
+		} else if (command.contains("pelletcollected")) {
 			// Update the current score
-			this.score.setValue(Integer.parseInt(options));
+			score.increment();
+			// Update using the given index of the pellet 
+			Pellet pelletCollected = pelletList.get(Integer.parseInt(options.split(" ")[0]));
+			pelletCollected.setIsEaten(true);
+			pelletCollected.hide();
+			
 		} else if (command.contains("gameover")) {
 			// Stop the animation
 			
@@ -446,6 +451,7 @@ public class PacmanClientGUI extends Application implements ConsoleListener {
 	private void gameRenderLoop(GraphicsContext gc) {
     	LongObject lastNanoTime = new LongObject(System.nanoTime());
     	pelletList = generatePellets(map);
+    	GameCharacter gameChar = getCurrentGameCharacter();
     	
     	// Start the animation rendering timer
     	new AnimationTimer() {
@@ -455,11 +461,11 @@ public class PacmanClientGUI extends Application implements ConsoleListener {
                 double elapsedTime = (currentNanoTime - lastNanoTime.value) / 1000000000.0;
                 lastNanoTime.value = currentNanoTime;
                 
-                // If client is Pacman and is about to hit a wall, then he will stop
-                if (currentChar == Characters.PACMAN) {
-                	int[] pacPosition = getCharacterLocation(pac);
-                	if (map.nextTileValue(pacPosition, pac.getDirection()) == TileValue.WALL.getValue()) {
-                		sendMovement(pac, Movement.STILL.getValue());
+                // If client is about to hit a wall (and not staying still), tell server to stop movement
+                if (gameChar.getDirection() != Movement.STILL) {
+                	int[] charPosition = getCharacterLocation(gameChar);
+                	if (map.nextTileValue(charPosition, gameChar.getDirection()) == TileValue.WALL.getValue()) {
+                		sendMovement(gameChar, Movement.STILL.getValue());
                 	}
                 }
                 
@@ -481,6 +487,25 @@ public class PacmanClientGUI extends Application implements ConsoleListener {
                 	Ghost currentGhost = ghostRenderIter.next();
                 	currentGhost.render(gc);
                 }
+                
+                // Client-side Pacman collision detection                
+                if (currentChar == Characters.PACMAN) {
+                	ListIterator<Pellet> pelletListIter = pelletList.listIterator();
+                    while ( pelletListIter.hasNext() )
+                    {
+                    	int pelletIndex = pelletListIter.nextIndex();
+                        Pellet pellet = pelletListIter.next();
+                        // If Pacman collides with a pellet that hasn't been eaten yet...
+                        if ( pac.intersects(pellet) && !pellet.getIsEaten()) {
+                    		// (client-side) Set the pellet to be eaten and hidden
+                        	pellet.setIsEaten(true);
+                        	pellet.hide();
+                        	// Send a message to the server with the pellet index
+                            PacmanClientDriver.doCommand("pelletcollected:" + pelletIndex);
+                        }
+                    }
+                }
+                
 
                 // Update the score text
                 String pointsText = "Score: " + (100 * score.getValue());
@@ -576,14 +601,38 @@ public class PacmanClientGUI extends Application implements ConsoleListener {
     
     /**
 	 * Helper method used to get a movement direction using a KeyCode ID
-	 * @param id The ID of the KeyCode
+	 * @param code The ID of the KeyCode
+	 * @return The Movement direction
+	 */
+	public Movement getMovementUsingCode(int code) {
+		Movement movement = null;
+		
+		if (code == KeyCode.UP.getCode()) {
+			movement = Movement.UP;
+		} else if (code == KeyCode.DOWN.getCode()) {
+			movement = Movement.DOWN;
+		} else if (code == KeyCode.LEFT.getCode()) {
+			movement = Movement.LEFT;
+		} else if (code == KeyCode.RIGHT.getCode()) {
+			movement = Movement.RIGHT;
+		} else  {
+			movement = Movement.STILL;
+		}
+		
+		System.out.println("Movement is: " + movement);
+				
+		return movement;
+	}
+	
+	/**
+	 * Helper method used to get a movement direction using a Movement ID
+	 * @param code The ID of the Movement
 	 * @return The Movement direction
 	 */
 	public Movement getMovementUsingID(int id) {
 		Movement movement = null;
 		
 		if (id == Movement.UP.getValue()) {
-			System.out.println("Movement UP");
 			movement = Movement.UP;
 		} else if (id == Movement.DOWN.getValue()) {
 			movement = Movement.DOWN;
@@ -591,9 +640,9 @@ public class PacmanClientGUI extends Application implements ConsoleListener {
 			movement = Movement.LEFT;
 		} else if (id == Movement.RIGHT.getValue()) {
 			movement = Movement.RIGHT;
-		} else if (id == Movement.STILL.getValue()) {
+		} else  {
 			movement = Movement.STILL;
-		} 
+		}
 		
 		System.out.println("Movement is: " + movement);
 				

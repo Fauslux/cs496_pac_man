@@ -1,6 +1,7 @@
 package client;
 
 import common.Movement;
+import javafx.scene.image.Image;
 
 /**
  * This class is used to define specific methods for Pacman game characters
@@ -36,7 +37,7 @@ public class GameCharacter extends Sprite {
 	public void moveToLeft(String imgFileName) {
 		this.setDirection(Movement.LEFT);
 		this.setVelocity(-moveSpeed, 0);
-    	this.setImage(imgFileName);
+    	this.setImage(imgFileName, "left");
 	}
 
 	/**
@@ -46,7 +47,7 @@ public class GameCharacter extends Sprite {
 	public void moveToRight(String imgFileName) {
 		this.setDirection(Movement.RIGHT);
 		this.setVelocity(moveSpeed, 0);
-		this.setImage(imgFileName);
+		this.setImage(imgFileName, "right");
 	}
 
 	/**
@@ -56,7 +57,7 @@ public class GameCharacter extends Sprite {
 	public void moveToUp(String imgFileName) {
 		this.setDirection(Movement.UP);
 		this.setVelocity(0, -moveSpeed);
-		this.setImage(imgFileName);
+		this.setImage(imgFileName, "up");
 	}
 
 	/**
@@ -66,7 +67,7 @@ public class GameCharacter extends Sprite {
 	public void moveToDown(String imgFileName) {
 		this.setDirection(Movement.DOWN);
 		this.setVelocity(0, moveSpeed);
-    	this.setImage(imgFileName);
+    	this.setImage(imgFileName, "down");
 	}
 	
 	/**
@@ -90,6 +91,9 @@ public class GameCharacter extends Sprite {
 			break;
 		case RIGHT:
 			this.moveToRight(imgName);
+			break;
+		case STILL:
+			this.stopMove();
 			break;
 		}
 	}
@@ -120,5 +124,10 @@ public class GameCharacter extends Sprite {
 	
 	public String toString() {
 		return imgName;
+	}
+	
+	public void setImage(String filename, String direction) {
+		Image localImage = new Image(this.imgName + "_" + direction + "_25.png");
+		setImage(localImage);
 	}
 }

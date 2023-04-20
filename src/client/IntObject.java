@@ -13,6 +13,10 @@ public class IntObject
     	this.value++;
     }
     
+    public void increment(int value) {
+    	this.value += value;
+    }
+    
     public int getValue() {
     	return this.value;
     }
