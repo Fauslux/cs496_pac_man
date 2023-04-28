@@ -17,7 +17,6 @@ public class PacmanServerDriver {
      * @param args a String list of arguments
      */
     public static void main(String[] args) {
-        
         int port = DEFAULT_PORT;
         try {
             if (args.length == 1) {
@@ -38,7 +37,6 @@ public class PacmanServerDriver {
         } catch(IllegalArgumentException iae) {
             System.out.println(iae.getMessage());
         }
-    }
-	
-	
+    }	
 }
+

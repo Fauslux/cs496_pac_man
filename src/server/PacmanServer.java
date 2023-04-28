@@ -34,6 +34,10 @@ public class PacmanServer implements MessageListener {
     private HashMap<ConnectionAgent, Boolean> clientReady;
     // Pacman's current score
     private int score;
+    // Keeps track of how many pellets have been eaten
+    private int pelletsEaten;
+    // How many total pellets there are in the tile map 
+    private int totalPellets;
     
 	
     /**
@@ -47,8 +51,7 @@ public class PacmanServer implements MessageListener {
     	this.clientCharacterID = new HashMap<>();
     	this.clientScores = new HashMap<>();
     	this.clientReady = new HashMap<>();
-    	this.tileMap = new TileMap();
-    	this.score = 0;
+
     	setupGame();
 
     }
@@ -57,7 +60,10 @@ public class PacmanServer implements MessageListener {
      * The method that will initialize the game
      */
     public void setupGame() {
-    	
+    	this.tileMap = new TileMap();
+    	this.score = 0;
+    	this.pelletsEaten = 0;
+    	this.totalPellets = this.countPelletsInMap();
     }
     
     /**
@@ -73,20 +79,18 @@ public class PacmanServer implements MessageListener {
                     ConnectionAgent agent = new ConnectionAgent(socket);
                     
                     // !!!!! TODO: get player names from API !!!!!
-                    this.agents.put(agent, "player" + agents.size());
+                    String playerName = "player" + agents.size();
+                    // Tell all players to update their player list
+                    broadcast("newplayer:" + playerName);
+
+                    this.agents.put(agent, playerName);
                     this.clientReady.put(agent, false);
-                    
                     // Set client's character based on when they joined (first is Pacman, etc.)
                     int charID = clientCharacterID.size();
                 	this.clientCharacterID.put(agent, charID);
                 	
-                    // Tell all players to update their player list
-                    //System.out.println("new player: " + this.agents.get(agent));
-                    broadcast("newplayer:" + this.agents.get(agent));
                     
-                    agent.sendMessage("FIRST CONTACT");
                     agent.addMessageListener(this);
-                    
                     Thread serverThread = new Thread(agent);
                     serverThread.start();
             	} 
@@ -104,7 +108,8 @@ public class PacmanServer implements MessageListener {
         for(Map.Entry<ConnectionAgent, String> entry : this.agents.entrySet())     {
         	ConnectionAgent agent = entry.getKey();
         	System.out.println("Broadcasting to " + agent);
-        	agent.sendMessage(message + "\n");
+        	// Removed \n from sent message
+        	agent.sendMessage(message + "");
         }
     }
     
@@ -154,6 +159,12 @@ public class PacmanServer implements MessageListener {
         	// If Pacman collects a pellet, update everyone's score
         	this.score += 100;
         	broadcast("pelletcollected:" + options + " ");
+        	this.pelletsEaten++;
+        	if (this.pelletsEaten == this.totalPellets) {
+        		broadcast("refreshpellets:");
+        		this.pelletsEaten = 0;
+        	}
+        	
         } else if (command.contains("ready")) {
         	// If the player has indicated they are ready, set their ready status
         	this.clientReady.replace(clientAgent, true);
@@ -178,6 +189,9 @@ public class PacmanServer implements MessageListener {
 	    		
 	    		broadcast("startgame:" + agents.size() + " ");
 	    	}
+        } else if (command.contains("hitghost") && clientCharacter == Characters.PACMAN) {
+        	// !!!!! TODO: If the player is the last player, then the whole game is over
+        	broadcast("turnended:" + agents.get(clientAgent) + " ");
         }
 	}
 	
@@ -212,12 +226,10 @@ public class PacmanServer implements MessageListener {
 		StringBuilder playerList = new StringBuilder();
         int entryIndex = 0;
         for (Map.Entry<ConnectionAgent, String> entry : this.agents.entrySet()) {
-        	playerList.append(entry.getValue());
-        	// If the entry is not the last one, add a space
-        	if (entryIndex != agents.size() - 1) { 
-        		playerList.append(" ");
-        	}
+        	System.out.println("Adding Player to Built Player List: " + entry.getValue());
+        	playerList.append(entry.getValue() + " ");
         }		
+        System.out.println("Player List: " + playerList);
         return playerList;
 	}
 
@@ -225,6 +237,7 @@ public class PacmanServer implements MessageListener {
 	public void sourceClosed(MessageSource source) {
 		System.out.println("Source closed: " + source);
 		// TODO: Remove clients when they leave, tell other clients
+		
 		// TODO: Change their movement to AI, or remove their character from the game?
 	}
 
@@ -247,7 +260,26 @@ public class PacmanServer implements MessageListener {
 		} else if (id == Movement.STILL.getValue()) {
 			movement = Movement.STILL;
 		} 
-						
+		
 		return movement;
+	}
+	
+	/**
+	 * Counts the number of pellets in the tile map
+	 * @return the number of pellets in the tile map
+	 */
+	private int countPelletsInMap() {
+		int[][] map = tileMap.getMap();
+		int pellets = 0;
+		
+		for (int i = 1; i < map.length; i++) {
+			for (int j = 1; j < map[i].length; j++) {
+				if (map[i][j] == TileValue.PELLET.getValue()) {
+					pellets++;
+				}
+			}
+		}
+		
+		return pellets;
 	}
 }

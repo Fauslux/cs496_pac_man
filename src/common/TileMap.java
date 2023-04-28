@@ -26,11 +26,7 @@ public class TileMap {
 	// The initial/starting location of Blinky as an array of 2 integers.
 	public final static int[] INITIALINKYLOCATION = {17, 13};
 	// The initial/starting location of Blinky as an array of 2 integers.
-	public final static int[] INITIALCLYDELOCATION = {14, 17};
-
-	
-	// The location of Pacman as an array.
-	private int[] pacmanLocation;
+	public final static int[] INITIALCLYDELOCATION = {14, 17};	
 	
 	// This is the main map that will be used in the Pac-Man game, utilizing values to represent
 	// certain tile content.
@@ -73,7 +69,7 @@ public class TileMap {
 	 * Constructor for a TileMap.
 	 */
 	public TileMap() {
-		this.pacmanLocation = INITIALPACLOCATION;
+		// !!!TODO: Add settings variables (# tiles, locations) for different maps?
 	}
 	
 	/**
