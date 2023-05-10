@@ -1,6 +1,8 @@
 package client;
 
 
+import java.net.URISyntaxException;
+
 import javafx.geometry.Rectangle2D;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.Image;
@@ -35,8 +37,14 @@ public abstract class Sprite {
 	
 	
 	public void setImage(String filename) {
-		Image localImage = new Image(filename);
-		setImage(localImage);
+		try {
+			Image localImage = new Image(getClass().getResource(
+					"/game_resources/" + filename).toURI().toString());
+			setImage(localImage);
+
+		} catch (URISyntaxException e) {
+			e.printStackTrace();
+		}
 	}
 	
 	
@@ -48,6 +56,14 @@ public abstract class Sprite {
 	public void setVelocity(double x, double y) {
 		velocityX = x;
 		velocityY = y;
+	}
+	
+	public double getVelocityX() {
+		return this.velocityX;
+	}
+	
+	public double getVelocityY() {
+		return this.velocityY;
 	}
 	
 	public void addVelocity(double x, double y) {

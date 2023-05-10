@@ -1,4 +1,16 @@
 /** Background color for the pregame screen */
 .bgColor {
-	-fx-background-color: linear-gradient(#f5eb67 0%, #f1f1f1 50%, #d462e3 100%); 
+	-fx-background-color:  rgba(33, 0, 127, .8); 
+}
+
+.horizontalSpacer {
+	-fx-min-width:0px;
+	-fx-max-width:10000px;
+	-fx-pref-width:10000px;	
+}
+
+.sepSpacer {
+	-fx-min-width:0px;
+	-fx-max-width:50px;
+	-fx-pref-width:50px;	
 }

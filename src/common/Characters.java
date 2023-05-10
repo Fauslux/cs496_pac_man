@@ -7,11 +7,11 @@ package common;
  */
 
 public enum Characters {
-	PACMAN(0, "Pacman"),
-	BLINKY(1, "Blinky"),
-	PINKY(2, "Pinky"),
-	INKY(3, "Inky"),
-	CLYDE(4, "Clyde");
+	PACMAN(0, "pac"),
+	BLINKY(1, "blinky"),
+	PINKY(2, "pinky"),
+	INKY(3, "inky"),
+	CLYDE(4, "clyde");
 	
 	// An integer ID used to identify the character
 	private int characterID;

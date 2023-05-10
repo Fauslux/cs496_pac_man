@@ -1,7 +1,12 @@
 package client;
 
-public class IntObject
-{
+/**
+ * This class is used to hold an integer object for the game
+ * @author Kevin Richardson, Dillon Orr
+ * @version May 2023
+ */
+
+public class IntObject {
     private int value;
     
     public IntObject(int i)
@@ -11,6 +16,10 @@ public class IntObject
     
     public void increment() {
     	this.value++;
+    }
+    
+    public void decrement() {
+    	this.value--;
     }
     
     public void increment(int value) {

@@ -83,6 +83,8 @@ public class PacmanClientDriver {
      * @param command The command to send to the server
      */
     public static void doCommand(String command) {
+    	System.out.println("Sending message: " + command);
+    	
     	// If the ConnectionAgent of LobbyClient is not null...
     	if(pacmanClient.getAgent() != null) {    		
     		// If the ConnectionAgent's socket is not cloesd...

@@ -50,6 +50,7 @@ public class BlinkyAI extends Ghost {
 		}
 		// Get a random index based on the number of possible moves in the array
 		Random random = new Random();
+		System.out.println(possibleMoves.size());
 		int randomIndex = random.nextInt(possibleMoves.size());
 		return possibleMoves.get(randomIndex);
 	}

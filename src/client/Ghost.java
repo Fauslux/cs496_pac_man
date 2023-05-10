@@ -11,7 +11,7 @@ import common.Movement;
 public class Ghost extends GameCharacter {
 	// The default movement speed of a ghost
 	// !TODO: Change to 60 when testing with 4/21/2023 version
-	private final int GHOSTSPEED = 60;
+	private final int GHOSTSPEED = 100;
 	// The name used to access images of the Ghost
 	private String imgName;
 	

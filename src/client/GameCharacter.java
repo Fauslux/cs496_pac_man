@@ -35,9 +35,14 @@ public class GameCharacter extends Sprite {
 	 * @param imgFileName the filename of the image to use for the character going left
 	 */
 	public void moveToLeft(String imgFileName) {
+		System.out.println(imgFileName + " moving left, speed: " + moveSpeed);
+
 		this.setDirection(Movement.LEFT);
 		this.setVelocity(-moveSpeed, 0);
     	this.setImage(imgFileName, "left");
+    	
+    	System.out.println(imgFileName+ " Velocity: [X: " + this.getVelocityX() + 
+				", Y: " + this.getVelocityY() + "]");
 	}
 
 	/**
@@ -45,9 +50,14 @@ public class GameCharacter extends Sprite {
 	 * @param imgFileName the filename of the image to use for the character going right
 	 */
 	public void moveToRight(String imgFileName) {
+		System.out.println(imgFileName + " moving right, speed: " + moveSpeed);
+
 		this.setDirection(Movement.RIGHT);
 		this.setVelocity(moveSpeed, 0);
 		this.setImage(imgFileName, "right");
+		
+		System.out.println(imgFileName+ " Velocity: [X: " + this.getVelocityX() + 
+				", Y: " + this.getVelocityY() + "]");
 	}
 
 	/**
@@ -55,9 +65,14 @@ public class GameCharacter extends Sprite {
 	 * @param imgFileName the filename of the image to use for the character going up
 	 */
 	public void moveToUp(String imgFileName) {
+		System.out.println(imgFileName + " moving up, speed: " + moveSpeed);
+
 		this.setDirection(Movement.UP);
 		this.setVelocity(0, -moveSpeed);
 		this.setImage(imgFileName, "up");
+		
+		System.out.println(imgFileName+ " Velocity: [X: " + this.getVelocityX() + 
+				", Y: " + this.getVelocityY() + "]");
 	}
 
 	/**
@@ -65,9 +80,13 @@ public class GameCharacter extends Sprite {
 	 * @param imgFileName the filename of the image to use for the character going down
 	 */
 	public void moveToDown(String imgFileName) {
+		System.out.println(imgFileName + " moving down, speed: " + moveSpeed);
 		this.setDirection(Movement.DOWN);
 		this.setVelocity(0, moveSpeed);
     	this.setImage(imgFileName, "down");
+    	
+    	System.out.println(imgFileName+ " Velocity: [X: " + this.getVelocityX() + 
+    												", Y: " + this.getVelocityY() + "]");
 	}
 	
 	/**
@@ -127,7 +146,16 @@ public class GameCharacter extends Sprite {
 	}
 	
 	public void setImage(String filename, String direction) {
-		Image localImage = new Image(this.imgName + "_" + direction + "_25.png");
-		setImage(localImage);
+		super.setImage(this.imgName + "_" + direction + "_25.png");
 	}
+	
+	/**
+	 * Returns the image name used by the character
+	 * @return the image name used by the character
+	 */
+	public String getImageName() {
+		return this.imgName;
+	}
+	
+	
 }

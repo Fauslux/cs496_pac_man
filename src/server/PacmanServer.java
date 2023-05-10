@@ -3,6 +3,7 @@ package server;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
@@ -20,10 +21,16 @@ public class PacmanServer implements MessageListener {
 	private static final int MAXPLAYERS = 5;
 	// Constant that determines the minimum amount of players
 	private static final int MINPLAYERS = 1;
+	// Constant that determings the starting amount of Pacman's lives
+	private final int STARTINGLIVES = 2;
     // The server socket
     private ServerSocket serverSocket;
     // HashMap that holds a client's username and a corresponding ConnectionAgent
     private HashMap<ConnectionAgent, String> agents; 
+    // ArrayList that holds a client's ConnectionAgent (used when order matters)
+    private ArrayList<ConnectionAgent> agentsArrayList;
+    // StringBuilder that builds a player list when players join
+    private StringBuilder stringPlayerList;
     // HashMap that maps a client to a specific game character
     private HashMap<ConnectionAgent, Integer> clientCharacterID;
     // TileMap that the game will use
@@ -38,6 +45,12 @@ public class PacmanServer implements MessageListener {
     private int pelletsEaten;
     // How many total pellets there are in the tile map 
     private int totalPellets;
+    // How many lives the current Pacman has
+    private int currentPacLives;
+    // Boolean determinant for if the game is started
+    private boolean gameStarted;
+    // Boolean determinant for if the game is over
+    private boolean gameOver;
     
 	
     /**
@@ -51,6 +64,9 @@ public class PacmanServer implements MessageListener {
     	this.clientCharacterID = new HashMap<>();
     	this.clientScores = new HashMap<>();
     	this.clientReady = new HashMap<>();
+    	this.stringPlayerList = new StringBuilder();
+    	this.gameStarted = false;
+    	this.agentsArrayList = new ArrayList<>();
 
     	setupGame();
 
@@ -74,26 +90,39 @@ public class PacmanServer implements MessageListener {
         while(!serverSocket.isClosed()){
             try{
             	// Currently, the game will only hold 5 players
+            	
             	if (agents.size() < MAXPLAYERS) {
-            		Socket socket = serverSocket.accept();
-                    ConnectionAgent agent = new ConnectionAgent(socket);
-                    
-                    // !!!!! TODO: get player names from API !!!!!
-                    String playerName = "player" + agents.size();
-                    // Tell all players to update their player list
-                    broadcast("newplayer:" + playerName);
-
-                    this.agents.put(agent, playerName);
-                    this.clientReady.put(agent, false);
-                    // Set client's character based on when they joined (first is Pacman, etc.)
-                    int charID = clientCharacterID.size();
-                	this.clientCharacterID.put(agent, charID);
-                	
-                    
-                    agent.addMessageListener(this);
-                    Thread serverThread = new Thread(agent);
-                    serverThread.start();
-            	} 
+            		if (!this.gameStarted) {
+	            		System.out.println("Game Started: " + this.gameStarted);
+	            		Socket socket = serverSocket.accept();
+	                    ConnectionAgent agent = new ConnectionAgent(socket);
+	                    
+	                    // !!!!! TODO: get player names from API !!!!!
+	                    String playerName = "player" + agents.size();
+	                    if (agents.size() == 0) {
+	                    	// If the first player is being added, do not add a space before
+	                        this.stringPlayerList.append(playerName);
+	                    } else {
+	                    	// If any player past the first is being added, add a space before
+	                    	this.stringPlayerList.append(" " + playerName);
+	                    }
+	                    // Tell all players to update their player list
+	                    System.out.println("Broadcasting new player");
+	                    broadcast("newplayer:" + playerName);
+	
+	                    this.agents.put(agent, playerName);
+	                    this.agentsArrayList.add(agent);
+	                    this.clientReady.put(agent, false);
+	                    // Set client's character based on when they joined (first is Pacman, etc.)
+	                    int charID = clientCharacterID.size();
+	                	this.clientCharacterID.put(agent, charID);
+	                	
+	
+	                    agent.addMessageListener(this);
+	                    Thread serverThread = new Thread(agent);
+	                    serverThread.start();
+	            	} 
+            	}
             } catch(IOException ioe) {
                 System.out.println(ioe.getMessage());
             }
@@ -134,15 +163,13 @@ public class PacmanServer implements MessageListener {
         Characters clientCharacter = Characters.getCharacterUsingID(charID);
 		
         if (command.contains("getplayerlist")) {
-        	clientAgent.sendMessage("newplayerlist:" + buildPlayerList());
+        	clientAgent.sendMessage("newplayerlist:" + stringPlayerList);
         } else if (command.contains("move")) {
         	// Validate move first and broadcast a valid move to all players
         	// TODO: Validate move
         	String[] moveArray = options.split(" ");
         	// moveArray[0] is the KeyCode ID
         	int keyID = Integer.parseInt(moveArray[0]);
-        	System.out.println("key id: " + keyID);
-        	System.out.println("Up KeyCode: " + "");
         	Movement direction = getMovementUsingID(keyID);
         	// moveArray[1] is the client character's x tile position
         	int posY = Integer.parseInt(moveArray[1]);
@@ -151,6 +178,9 @@ public class PacmanServer implements MessageListener {
         	
         	if (validateMove(direction, posX, posY)) {
         		broadcast("move:" + clientCharacter.getID() + " " + options + " ");
+        	} else {
+        		direction = Movement.STILL;
+        		broadcast("move:" + clientCharacter.getID() + " " + direction + " " + posY + " " + posX + " ");
         	}
 
         	
@@ -176,25 +206,99 @@ public class PacmanServer implements MessageListener {
 	    			readyCount++;
 	    		}
 	    	}
-	    	
 	    	// !!!!! TODO: Should we allow singleplayer games that just play against AI?
 	    	// TODO: Also, should we allow spectators?
-	    		
 	    	if (readyCount == agents.size() && agents.size() >= MINPLAYERS) {
 	    		// If every player is ready (and at least 2 players), tell them to start
 	    		for(Map.Entry<ConnectionAgent, Integer> entry : this.clientCharacterID.entrySet())     {
 	            	ConnectionAgent agent = entry.getKey();
 	            	agent.sendMessage("character:" + entry.getValue() + " ");
 	            }
-	    		
-	    		broadcast("startgame:" + agents.size() + " ");
+	    		this.gameStarted = true;
+	    		this.currentPacLives = this.STARTINGLIVES;
+	    		broadcast("startgame:" + agents.size() + " " + this.currentPacLives + " ");
 	    	}
         } else if (command.contains("hitghost") && clientCharacter == Characters.PACMAN) {
         	// !!!!! TODO: If the player is the last player, then the whole game is over
-        	broadcast("turnended:" + agents.get(clientAgent) + " ");
+        	// Broadcast that the 
+        	broadcast("livelost:" + agents.get(clientAgent) + " ");
+        	this.currentPacLives--;
+        	this.pelletsEaten = 0;
+        	
+        	// If the current Pacman is out of lives, switch to the next player
+        	
+    		if (this.currentPacLives == 0) {
+    			// Broadcast the highscore of the Pacman player
+    			broadcast("highscore:" + this.agentsArrayList.indexOf(clientAgent) + 
+																" " + this.score + " ");
+        		this.clientScores.put(clientAgent, this.score);
+        		this.score = 0;
+
+    			if (isLastPlayer(clientAgent)) {
+            		// If the player is the last Pacman, the game is over
+    				broadcast("gameover:");
+    				this.gameOver = true;
+    				
+    			} else {
+            		
+            		// Hold for 5 seconds to give a break between rounds
+            		try {
+        				Thread.sleep(5000);
+        			} catch (InterruptedException e) {
+        				e.printStackTrace();
+        			}
+            		changeTurn();
+            		this.currentPacLives = this.STARTINGLIVES;
+            		
+    				// Tell players to restart their game rendering with a new turn
+                	broadcast("newturn:" + this.STARTINGLIVES + " ");
+    			}
+        	} else if (!this.gameOver) {
+        		// Hold for 5 seconds to give a break between rounds
+        		try {
+    				Thread.sleep(5000);
+    			} catch (InterruptedException e) {
+    				e.printStackTrace();
+    			}
+        		
+        		// Tell players to restart their game rendering
+            	broadcast("continuegame:");
+        	}
         }
 	}
 	
+	/**
+	 * Method used to determine if the client is the last player 
+	 * @param clientAgent The client that is being checked
+	 * @return true if the client is the last player
+	 */
+	private boolean isLastPlayer(ConnectionAgent clientAgent) {
+		boolean result = false;
+		ConnectionAgent lastAgent = this.agentsArrayList.get(this.agentsArrayList.size() - 1);
+		
+		if (clientAgent.equals(lastAgent)) {
+			System.out.println(this.agents.get(lastAgent) + " is the last player");
+			result = true;
+		}
+		
+		return result;
+	}
+
+	/**
+	 * Mtehod used when the current Pacman loses all of their lives, switching to the next player
+	 */
+	private void changeTurn() {
+		for(Map.Entry<ConnectionAgent, Integer> entry : this.clientCharacterID.entrySet())     {
+        	ConnectionAgent agent = entry.getKey();
+        	// Get the new character's ID by doing [(current ID + 1) mod (number of players)]
+        	//int newCharacterID = (entry.getValue() - 1) % this.clientCharacterID.size();
+        	int newCharacterID = Math.floorMod(entry.getValue() - 1, this.clientCharacterID.size());
+        	entry.setValue(newCharacterID);
+        	// Tell the client's their new character
+        	agent.sendMessage("character:" + entry.getValue() + " ");
+        }
+	}
+
 	/**
 	 * Used to validate a move of a client's character based on their input direction and position
 	 * @param direction The direction that the client wants their character to move
@@ -216,21 +320,6 @@ public class PacmanServer implements MessageListener {
 		}	
 		
 		return result;
-	}
-
-	/**
-	 * Method used when a single String needs to be built with the all player names
-	 * @return a single String with all player names, separated by spaces
-	 */
-	private StringBuilder buildPlayerList() {
-		StringBuilder playerList = new StringBuilder();
-        int entryIndex = 0;
-        for (Map.Entry<ConnectionAgent, String> entry : this.agents.entrySet()) {
-        	System.out.println("Adding Player to Built Player List: " + entry.getValue());
-        	playerList.append(entry.getValue() + " ");
-        }		
-        System.out.println("Player List: " + playerList);
-        return playerList;
 	}
 
 	@Override
