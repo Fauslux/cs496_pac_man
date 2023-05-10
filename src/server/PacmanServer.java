@@ -236,7 +236,8 @@ public class PacmanServer implements MessageListener {
 
     			if (isLastPlayer(clientAgent)) {
             		// If the player is the last Pacman, the game is over
-    				broadcast("gameover:");
+    				String winner = getWinner();
+    				broadcast("gameover:" + winner + " ");
     				this.gameOver = true;
     				
     			} else {
@@ -267,6 +268,26 @@ public class PacmanServer implements MessageListener {
         }
 	}
 	
+	/**
+	 * Method used to get the name of the winner
+	 * @return
+	 */
+	private String getWinner() {
+		String winnerName = "";
+		int highScore = 0;
+		
+		for(Map.Entry<ConnectionAgent, Integer> entry : this.clientScores.entrySet())     {
+        	if (entry.getValue() > highScore) {
+        		 highScore = entry.getValue();
+        		 winnerName = this.agents.get(entry.getKey());
+        	} else if (entry.getValue() == highScore) {
+        		winnerName = "%draw";
+        	}
+        }
+		
+		return winnerName;
+	}
+
 	/**
 	 * Method used to determine if the client is the last player 
 	 * @param clientAgent The client that is being checked

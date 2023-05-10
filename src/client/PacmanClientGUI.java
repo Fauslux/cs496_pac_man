@@ -81,6 +81,8 @@ public class PacmanClientGUI extends Application implements ConsoleListener {
 	private int maxWindowWidth;
 	/** The GraphicsContext that the game will be rendered on (characters, pellets, score, etc.) */
 	GraphicsContext gameGraphicsContext;
+	/** The String of the player who won the game (retrieved when the server says game over) */
+	private String winnerName;
 	
 	/**
 	 * Tells the Pacman game screen to start.
@@ -310,6 +312,8 @@ public class PacmanClientGUI extends Application implements ConsoleListener {
 			
 		} else if (command.contains("gameover")) {
 			// Stop the animation
+			// The server sends the name of a winner (or %draw) when the game ends
+			this.winnerName = options.split(" ")[0];
 			this.gameOver = true;
 		} else if (command.contains("startgame")) {
 			// Initial message received when the game will first begin
@@ -661,14 +665,21 @@ public class PacmanClientGUI extends Application implements ConsoleListener {
                 // !!! TODO: Update with player name
                 
                 if (turnOver) {
-                	String displayString = "PLAYER (NAME) GAME OVER";
+                	String turnPacName = getTurnPacmanName();
+                	String displayString = turnPacName + " LOST A LIFE";
+                	if (lives.getValue() == 0) {
+                		displayString = turnPacName + " TURN OVER";
+                	}
                 	if (gameOver) {
                 		// !!! TODO: If the game is over
                 		// Tell the players the game is over, the winner, and to return to the lobby
-                		displayString = "GAME OVER - RETURNING TO LOBBY";
+                		if (!winnerName.equals("%draw")) {
+                    		displayString = "GAME OVER - " + winnerName + " wins - RETURNING TO LOBBY";
+                		} else {
+                    		displayString = "GAME OVER - DRAW - RETURNING TO LOBBY";
+                		}
                 		
                 	}
-                	System.out.println(gameOver);
                 	gc.fillText(displayString, (TILESIZE * TileMap.HORIZONTALTILES)/2, 
 													(TILESIZE * TileMap.VERTICALTILES)/2);
                 	gc.strokeText(displayString, (TILESIZE * TileMap.HORIZONTALTILES)/2, 
@@ -677,8 +688,19 @@ public class PacmanClientGUI extends Application implements ConsoleListener {
                 	this.stop();
                 }
             }
+
+
+			
         };
         animTimer.start();
+	}
+
+	/**
+	 * Returns the name of the player who is currently playing as Pacman
+	 * @return the name of the player who is currently playing as Pacman
+	 */
+	private String getTurnPacmanName() {
+		return this.playerCards.get(this.turnNumber).getPlayerName();
 	}
     	
 	/**
@@ -716,14 +738,11 @@ public class PacmanClientGUI extends Application implements ConsoleListener {
 				&& desiredDirection != Movement.STILL
 				&& desiredDirection != gameChar.getDirection()) {
         	
-            System.out.println("Position of " + gameChar + ": Y:" + charPosition[0] + " X:" + charPosition[1]);
 			
             sendMovement(gameChar, desiredDirection.getValue());
 		} else if (map.nextTileValue(charPosition, currentDirection) == TileValue.WALL.getValue()
 				&& currentDirection != Movement.STILL) {
 			
-	        System.out.println("Position of " + gameChar + ": Y:" + charPosition[0] + " X:" + charPosition[1]);
-
             // If character is about to hit a wall and not staying still, stay still
     		sendMovement(gameChar, Movement.STILL.getValue());
     	}
