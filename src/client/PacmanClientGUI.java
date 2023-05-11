@@ -125,6 +125,9 @@ public class PacmanClientGUI extends Application implements ConsoleListener {
         this.readyButton.setOnAction(buttonHandler);
         root.setBottom(readyButton);
         
+        PacmanClientDriver.doCommand("startInfo:" + 
+                PacmanClientDriver.getPlayerName() + ":" + 
+                PacmanClientDriver.getCode());
         
         // Ask the server to send a list of current players
         PacmanClientDriver.doCommand("getplayerlist:");

@@ -6,6 +6,7 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.logging.Level;
 
 import common.Characters;
@@ -52,13 +53,25 @@ public class PacmanServer implements MessageListener {
     // Boolean determinant for if the game is over
     private boolean gameOver;
     
+    /** */
+    private ApiCommunicator apiTalker;
+    
+    private Thread apiThread; 
+    
+    private boolean noApi;
+    
+    private boolean gotStartInformation;
 	
     /**
      * Constructor for a Pacman game server
      * @param port the port number
      * @throws IOException 
      */
-    public PacmanServer(int port) throws IOException {
+    public PacmanServer(int port, String instanceId) throws IOException {
+        //TODO
+        noApi = false;
+        
+        
     	this.serverSocket = new ServerSocket(port);
     	this.agents = new HashMap<>();
     	this.clientCharacterID = new HashMap<>();
@@ -67,6 +80,11 @@ public class PacmanServer implements MessageListener {
     	this.stringPlayerList = new StringBuilder();
     	this.gameStarted = false;
     	this.agentsArrayList = new ArrayList<>();
+    	
+    	this.apiTalker = new ApiCommunicator();
+    	this.apiTalker.setInstanceIdentification(instanceId);
+    	this.apiThread = new Thread(apiTalker);
+    	this.apiThread.start();
 
     	setupGame();
 
@@ -97,26 +115,6 @@ public class PacmanServer implements MessageListener {
 	            		Socket socket = serverSocket.accept();
 	                    ConnectionAgent agent = new ConnectionAgent(socket);
 	                    
-	                    // !!!!! TODO: get player names from API !!!!!
-	                    String playerName = "player" + agents.size();
-	                    if (agents.size() == 0) {
-	                    	// If the first player is being added, do not add a space before
-	                        this.stringPlayerList.append(playerName);
-	                    } else {
-	                    	// If any player past the first is being added, add a space before
-	                    	this.stringPlayerList.append(" " + playerName);
-	                    }
-	                    // Tell all players to update their player list
-	                    System.out.println("Broadcasting new player");
-	                    broadcast("newplayer:" + playerName);
-	
-	                    this.agents.put(agent, playerName);
-	                    this.agentsArrayList.add(agent);
-	                    this.clientReady.put(agent, false);
-	                    // Set client's character based on when they joined (first is Pacman, etc.)
-	                    int charID = clientCharacterID.size();
-	                	this.clientCharacterID.put(agent, charID);
-	                	
 	
 	                    agent.addMessageListener(this);
 	                    Thread serverThread = new Thread(agent);
@@ -127,6 +125,10 @@ public class PacmanServer implements MessageListener {
                 System.out.println(ioe.getMessage());
             }
         }
+    }
+    
+    private void setupPlayers() {
+        
     }
     
     /**
@@ -157,10 +159,15 @@ public class PacmanServer implements MessageListener {
 		}
 		// Get the ConnectionAgent of the client who sent the message
         ConnectionAgent clientAgent = (ConnectionAgent) source;
-        
-        // Get the game character of the client who sent the message
-        int charID = this.clientCharacterID.get(clientAgent);
-        Characters clientCharacter = Characters.getCharacterUsingID(charID);
+     // Get the game character of the client who sent the message
+        int charID = -1;
+        Characters clientCharacter = null;
+        if(gotStartInformation && 
+                this.clientCharacterID.containsKey(clientAgent)) {
+            // Get the game character of the client who sent the message
+            charID = this.clientCharacterID.get(clientAgent);
+            clientCharacter = Characters.getCharacterUsingID(charID);
+        }
 		
         if (command.contains("getplayerlist")) {
         	clientAgent.sendMessage("newplayerlist:" + stringPlayerList);
@@ -237,8 +244,21 @@ public class PacmanServer implements MessageListener {
     			if (isLastPlayer(clientAgent)) {
             		// If the player is the last Pacman, the game is over
     				String winner = getWinner();
+    				this.apiTalker.addWinner(winner);
     				broadcast("gameover:" + winner + " ");
     				this.gameOver = true;
+    				ArrayList<ConnectionAgent> agentList = new ArrayList<ConnectionAgent>();
+    				for(ConnectionAgent agent : agentList) {
+    				    this.apiTalker.addLoser(this.agents.get(agent));
+    				    if(!agent.equals(clientAgent)) {
+    				        this.closeLogic(agent);
+    				        System.out.println("Closing 1");
+    				    }
+    				}
+    				if(this.agents.size() == 0) {
+    				    this.closeLogic(clientAgent);
+    				    System.out.println("closing 2");
+                    }
     				
     			} else {
             		
@@ -265,7 +285,91 @@ public class PacmanServer implements MessageListener {
         		// Tell players to restart their game rendering
             	broadcast("continuegame:");
         	}
+        } else if(command.contains("startInfo")) {
+            System.out.println("Found startInfo");
+            setupGameInformation(messageArray, clientAgent);
+        } else if(command.contains("close")) {
+            this.closeLogic(clientAgent);
         }
+	}
+	
+	private void setupGameInformation(String[] messageArray, 
+	        ConnectionAgent clientAgent) {
+	    String playerName = null;
+        if(messageArray.length > 1) {
+            String clientsName = messageArray[1];
+            String code = messageArray[2];
+            
+            if((!noApi) && this.apiTalker.gotStartInformation()) {
+                String[] players = this.apiTalker.getPlayers();
+                this.gotStartInformation = true;
+                
+                System.out.println("PLayers are " + players.length);
+                if(players.length > 0) {
+                    
+                    if(apiTalker.getCode().contentEquals(code)) {
+                        for(String names : players) {
+                            if(names.contentEquals(clientsName)) {
+                                playerName = clientsName;
+                            } else {
+                                System.out.println("Failed name test " + 
+                                        players.length);
+                            }
+                        }
+                    } else {
+                        System.out.println("Failed code test");
+                    }
+                }
+                
+                if(playerName != null) {
+
+                    givePlayerACharacter(playerName, clientAgent);
+                    
+                } else {
+                    clientAgent.close();
+                }
+                
+            } else {
+                playerName = "player" + agents.size();
+                givePlayerACharacter(playerName, clientAgent);
+            }
+        }
+	}
+
+    private void closeLogic(ConnectionAgent clientAgent) {
+        this.agents.remove(clientAgent);
+        this.agentsArrayList.remove(clientAgent);
+        this.clientReady.remove(clientAgent);
+        this.clientCharacterID.remove(clientAgent);
+        if(this.agents.size() == 0) {
+            this.apiTalker.setRunningStatus(false);
+        }
+        this.sourceClosed(clientAgent);
+    }
+    
+	
+	//TODO
+	private void givePlayerACharacter(String playerName, 
+	        ConnectionAgent clientAgent) {
+        if (agents.size() == 0) {
+            // If the first player is being added, do not add a 
+            // space before
+            this.stringPlayerList.append(playerName);
+        } else {
+            // If any player past the first is being added, add a 
+            // space before
+            this.stringPlayerList.append(" " + playerName);
+        }
+        // Tell all players to update their player list
+        System.out.println("Broadcasting new player");
+        broadcast("newplayer:" + playerName);
+
+        this.agents.put(clientAgent, playerName);
+        this.agentsArrayList.add(clientAgent);
+        this.clientReady.put(clientAgent, false);
+        // Set client's character based on when they joined (first is Pacman, etc.)
+        int charID = clientCharacterID.size();
+        this.clientCharacterID.put(clientAgent, charID);
 	}
 	
 	/**
@@ -342,7 +446,7 @@ public class PacmanServer implements MessageListener {
 		
 		return result;
 	}
-
+	
 	@Override
 	public void sourceClosed(MessageSource source) {
 		System.out.println("Source closed: " + source);

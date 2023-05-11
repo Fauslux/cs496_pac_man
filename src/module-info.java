@@ -6,6 +6,7 @@ module cs496_pac_man {
 	requires java.desktop;
 	requires java.logging;
 	requires javafx.web;
+    requires json.simple;
 	
 	opens client;
 }

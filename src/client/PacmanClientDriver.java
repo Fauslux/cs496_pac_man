@@ -18,15 +18,58 @@ public class PacmanClientDriver {
 	/** The listener for incoming messages in the console */
 	public static ConsoleListener conList;
 	
+	/** Name of player for verification*/
+	static private String playerName;
+	
+	/** Room id this player is coming from*/
+	static private String code;
+	
+	
 	/**
 	 * Constructor for a ClientDriver
 	 * @param address The address of the server socket to connect to
 	 * @param portNumber The port of the server socket to connect to
 	 */
-	public PacmanClientDriver(String address, String portNumber) {
+	public PacmanClientDriver(String address, String portNumber, 
+	        String playerName, String code) {
 		changeAddr(address);
 		changePort(portNumber);
+		changePlayerName(playerName);
+		changeCode(code);
 	}
+	
+	/**
+	 * Gets the player name for this client
+	 * @return A String containing a player's name.
+	 */
+	public static String getPlayerName() {
+	    return PacmanClientDriver.playerName;
+	}
+	
+	/** 
+	 * Gets the room id code for this game instance.
+	 * @return A String containing the room id code.
+	 */
+	public static String getCode() {
+	    return PacmanClientDriver.code;
+    }
+	
+	/**
+	 * Changes player name so when sent to the server it can be verified.
+	 * @param playerName - Name of Player
+	 */
+	private void changePlayerName(String playerName) {
+	    this.playerName = playerName;
+	}
+	
+	/**
+	 * Changes code number so the game knows that this player was a part
+	 * of the room when they joined.
+	 * @param code - Room id coming from Olympia
+	 */
+	private void changeCode(String code) {
+        this.code = code;
+    }
 	
 	/**
 	 * Change the address of the socket that client wants to connect to
@@ -50,8 +93,9 @@ public class PacmanClientDriver {
      */
     public static void main(String[] args) {
     	 try {
-             if(args.length == 2) {
-                 PacmanClientDriver drive = new PacmanClientDriver(args[0], args[1]);
+             if(args.length == 4) {
+                 PacmanClientDriver drive = new PacmanClientDriver(args[0], 
+                         args[1], args[2], args[3]);
                  drive.connect();
                  PacmanClientGUI.go(args);
              } else {

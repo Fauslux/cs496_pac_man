@@ -18,15 +18,17 @@ public class PacmanServerDriver {
      */
     public static void main(String[] args) {
         int port = DEFAULT_PORT;
+        String instanceId = "MyRoom";
         try {
-            if (args.length == 1) {
+            if (args.length == 2) {
                 port = Integer.parseInt(args[0]);
+                instanceId = args[1];
             } else{
-                System.out.println("Usage: java server.PacmanServerDriver <port>");
+                System.out.println("Usage: java server.PacmanServerDriver <port> <instanceId");
                 System.exit(1);
             }
             // Create the LobbyServer and tell it to start listening for incoming messages
-            PacmanServer pacServer = new PacmanServer(port);
+            PacmanServer pacServer = new PacmanServer(port, instanceId);
 			System.out.println("LS");
             pacServer.listen(); 
         
