@@ -247,18 +247,12 @@ public class PacmanServer implements MessageListener {
     				this.apiTalker.addWinner(winner);
     				broadcast("gameover:" + winner + " ");
     				this.gameOver = true;
-    				ArrayList<ConnectionAgent> agentList = new ArrayList<ConnectionAgent>();
-    				for(ConnectionAgent agent : agentList) {
-    				    this.apiTalker.addLoser(this.agents.get(agent));
-    				    if(!agent.equals(clientAgent)) {
-    				        this.closeLogic(agent);
-    				        System.out.println("Closing 1");
+    				for(Entry<ConnectionAgent, String> agent :
+    				        this.agents.entrySet()) {
+    				    if(!agent.getValue().contentEquals(winner)) {
+    				        this.apiTalker.addLoser(agent.getValue());
     				    }
     				}
-    				if(this.agents.size() == 0) {
-    				    this.closeLogic(clientAgent);
-    				    System.out.println("closing 2");
-                    }
     				
     			} else {
             		
@@ -288,6 +282,8 @@ public class PacmanServer implements MessageListener {
         } else if(command.contains("startInfo")) {
             System.out.println("Found startInfo");
             setupGameInformation(messageArray, clientAgent);
+        } else if(command.contains("gameoverclose")) {
+            closeLogic(clientAgent);
         } else if(command.contains("close")) {
             this.closeLogic(clientAgent);
         }
@@ -343,8 +339,11 @@ public class PacmanServer implements MessageListener {
         this.clientCharacterID.remove(clientAgent);
         if(this.agents.size() == 0) {
             this.apiTalker.setRunningStatus(false);
+            this.sourceClosed(clientAgent);
+        } else {
+            System.out.println("This many players are left " + this.agents.size());
+            this.sourceClosed(clientAgent);
         }
-        this.sourceClosed(clientAgent);
     }
     
 	

@@ -215,6 +215,7 @@ public class ApiScheduledTask extends TimerTask {
     	System.out.println("Game Running is " + gameRunning);
     	if(!this.gameRunning) {
     	    this.cancel();
+            System.exit(0);
     	}
     	
 	}

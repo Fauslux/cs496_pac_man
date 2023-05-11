@@ -60,7 +60,7 @@ public class ApiCommunicator implements Runnable {
 	    apiScheduledTask = new ApiScheduledTask(instanceIdentification, 
 	            gameStartInformation.getHostOfGame());
         Timer timer = new Timer();
-        timer.scheduleAtFixedRate(apiScheduledTask, 3000, 3000);
+        timer.scheduleAtFixedRate(apiScheduledTask, 2500, 2500);
         
 	}
 	

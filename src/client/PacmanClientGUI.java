@@ -318,6 +318,7 @@ public class PacmanClientGUI extends Application implements ConsoleListener {
 			// The server sends the name of a winner (or %draw) when the game ends
 			this.winnerName = options.split(" ")[0];
 			this.gameOver = true;
+			PacmanClientDriver.doCommand("close");
 		} else if (command.contains("startgame")) {
 			// Initial message received when the game will first begin
 			String[] messageArr = options.split(" ");
