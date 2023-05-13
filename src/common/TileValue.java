@@ -22,14 +22,28 @@ public enum TileValue {
 	
 	// The content of the tile is tied to a single integer value.
 	private int value;
+	
+	/**
+	 * Constructor for a TileValue enumeration entry
+	 * @param value The integer value that represents the tile
+	 */
 	TileValue(int value) {
 		this.value = value;
 	}
 	
+	/**
+	 * Returns the integer representation of the tile
+	 * @return the integer representation of the tile
+	 */
 	public int getValue() {
 		return this.value;
 	}
 	
+	/**
+	 * Get an enumeration entry using a given integer value 
+	 * @param value The integer value being given
+	 * @return the corresponding TileValue entry
+	 */
 	public TileValue getWithValue(int value) {
 		TileValue result = WALL;
 		

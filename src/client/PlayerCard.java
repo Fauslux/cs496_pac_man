@@ -13,6 +13,13 @@ import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.TextAlignment;
 
+/**
+ * This class is the GUI element for box to show player information, such as name, character,
+ * and high score.
+ * @author Dillon Orr
+ * @version May 2023
+ */
+
 public class PlayerCard extends VBox {
 	/** The image that represents the game character that the player is playing as */
 	private ImageView characterImageView;
@@ -20,9 +27,12 @@ public class PlayerCard extends VBox {
 	private String playerName;
 	/** The label to show the high-score of the player */
 	private Label highScoreLabel;
-	/** The high-score of the player */
-	private int highScore;
 	
+	/**
+	 * Constructor for a PlayerCard 
+	 * @param characterImgName The name of the character to set the image with
+	 * @param playerName The name of the player
+	 */
 	public PlayerCard(String characterImgName, String playerName) {
 		super(5);
 		this.setAlignment(Pos.BASELINE_CENTER);
@@ -35,7 +45,7 @@ public class PlayerCard extends VBox {
 	
 	/**
 	 * Constructor for a PlayerCard using a player's name
-	 * @param playerName
+	 * @param playerName The name of the player
 	 */
 	public PlayerCard(String playerName) {
 		super(5);
@@ -84,9 +94,7 @@ public class PlayerCard extends VBox {
 	 * Sets the high score of the player card
 	 * @param score The high score to set with 
 	 */
-	public void setScore(int score) {
-		//System.out.println("Setting score of " + this.playerName + " to " + score);
-		
+	public void setScore(int score) {		
 		Platform.runLater(new Runnable() {
 			@Override
 			public void run() {

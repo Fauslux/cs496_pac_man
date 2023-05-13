@@ -4,13 +4,11 @@ import common.Movement;
 
 /**
  * This class represents the Pacman game character 
- * @author Kevin Richardson
- * @version 2023
+ * @author Kevin Richardson, Dillon Orr
+ * @version May 2023
  */
 public class Pacman extends GameCharacter {
 	// The default movement speed of Pacman
-	// !!!TODO: TEMPORARY CHANGE OF SPEED TO 300, WAS !!! 125 !!! BEFORE
-	// !TODO: Change to 100 when testing with 4/21/2023 version
 	private final int PACSPEED = 125;
 	// The name of Pacman images
 	private static final String pacImg = "pac";

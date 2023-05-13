@@ -32,6 +32,7 @@ public class TileMap {
 	// certain tile content.
 	// The first index will be the y-coordinate, the second index will be the x-coordinate.
 	// !TODO: Unblock tunnels and add tunnel teleportation
+	// If you were wondering: yes - this took a while to create by hand, but it was fun nonetheless
 	private int[][] map = {
 			{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 			{0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0},
@@ -81,7 +82,6 @@ public class TileMap {
 	public int nextTileValue(int[] currentTile, Movement direction) {
 		int[] nextTile = currentTile.clone();
 		int nextTileValue = TileValue.WALL.getValue();
-		
 		if (direction == Movement.UP) {
 			// The tile above Pacman will be Pacman's location with y-1.
 			nextTile[YCOORDINATE] = currentTile[YCOORDINATE]-1;
@@ -96,7 +96,6 @@ public class TileMap {
 			// The tile above Pacman will be Pacman's location with x+1.
 			nextTile[XCOORDINATE] = currentTile[XCOORDINATE]+1;
 		} 
-		
 		// Check if the next tile is within the bounds of the map
 		if (nextTile[YCOORDINATE] < VERTICALTILES && nextTile[YCOORDINATE] >= 0 &&
 			nextTile[XCOORDINATE] < HORIZONTALTILES && nextTile[XCOORDINATE] >= 0) {
@@ -104,7 +103,6 @@ public class TileMap {
 			// If the next tile is within the map, get it's value
 			nextTileValue = map[nextTile[YCOORDINATE]][nextTile[XCOORDINATE]];
 		}
-		
 		return nextTileValue;
 	}
 	

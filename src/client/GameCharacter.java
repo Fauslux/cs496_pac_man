@@ -6,7 +6,7 @@ import javafx.scene.image.Image;
 /**
  * This class is used to define specific methods for Pacman game characters
  * @author Dillon Orr
- * @version March 2023
+ * @version May 2023
  */
 
 public class GameCharacter extends Sprite {
@@ -17,6 +17,10 @@ public class GameCharacter extends Sprite {
 	// This field holds the image name that will be used to change the Sprite
 	private String imgName;
 	
+	/**
+	 * Constructor for a game character, an extension of the Sprite
+	 * @param imgName The name used to find the image for the character
+	 */
 	public GameCharacter(String imgName) {
 		super();
 		this.imgName = imgName;
@@ -35,14 +39,9 @@ public class GameCharacter extends Sprite {
 	 * @param imgFileName the filename of the image to use for the character going left
 	 */
 	public void moveToLeft(String imgFileName) {
-		System.out.println(imgFileName + " moving left, speed: " + moveSpeed);
-
 		this.setDirection(Movement.LEFT);
 		this.setVelocity(-moveSpeed, 0);
-    	this.setImage(imgFileName, "left");
-    	
-    	System.out.println(imgFileName+ " Velocity: [X: " + this.getVelocityX() + 
-				", Y: " + this.getVelocityY() + "]");
+    	this.setImage(imgFileName, "left");	
 	}
 
 	/**
@@ -50,14 +49,9 @@ public class GameCharacter extends Sprite {
 	 * @param imgFileName the filename of the image to use for the character going right
 	 */
 	public void moveToRight(String imgFileName) {
-		System.out.println(imgFileName + " moving right, speed: " + moveSpeed);
-
 		this.setDirection(Movement.RIGHT);
 		this.setVelocity(moveSpeed, 0);
 		this.setImage(imgFileName, "right");
-		
-		System.out.println(imgFileName+ " Velocity: [X: " + this.getVelocityX() + 
-				", Y: " + this.getVelocityY() + "]");
 	}
 
 	/**
@@ -65,14 +59,9 @@ public class GameCharacter extends Sprite {
 	 * @param imgFileName the filename of the image to use for the character going up
 	 */
 	public void moveToUp(String imgFileName) {
-		System.out.println(imgFileName + " moving up, speed: " + moveSpeed);
-
 		this.setDirection(Movement.UP);
 		this.setVelocity(0, -moveSpeed);
 		this.setImage(imgFileName, "up");
-		
-		System.out.println(imgFileName+ " Velocity: [X: " + this.getVelocityX() + 
-				", Y: " + this.getVelocityY() + "]");
 	}
 
 	/**
@@ -83,10 +72,7 @@ public class GameCharacter extends Sprite {
 		System.out.println(imgFileName + " moving down, speed: " + moveSpeed);
 		this.setDirection(Movement.DOWN);
 		this.setVelocity(0, moveSpeed);
-    	this.setImage(imgFileName, "down");
-    	
-    	System.out.println(imgFileName+ " Velocity: [X: " + this.getVelocityX() + 
-    												", Y: " + this.getVelocityY() + "]");
+    	this.setImage(imgFileName, "down");    	
 	}
 	
 	/**
@@ -141,10 +127,18 @@ public class GameCharacter extends Sprite {
 		this.moveSpeed = movespeed;
 	}
 	
+	/**
+	 * Returns the image name as a String
+	 */
 	public String toString() {
 		return imgName;
 	}
 	
+	/**
+	 * Sets the image of the character sprite
+	 * @param filename 
+	 * @param direction
+	 */
 	public void setImage(String filename, String direction) {
 		super.setImage(this.imgName + "_" + direction + "_25.png");
 	}

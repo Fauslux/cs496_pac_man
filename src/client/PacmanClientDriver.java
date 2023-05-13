@@ -5,7 +5,7 @@ package client;
  * This is the driver for the client portion of the Pacman game.
  * @author Kevin Richardson
  * @author Dillon Orr
- * @version March 2023
+ * @version May 2023
  */
 
 public class PacmanClientDriver {
@@ -17,10 +17,8 @@ public class PacmanClientDriver {
 	public static PacmanClient pacmanClient;
 	/** The listener for incoming messages in the console */
 	public static ConsoleListener conList;
-	
 	/** Name of player for verification*/
 	static private String playerName;
-	
 	/** Room id this player is coming from*/
 	static private String code;
 	

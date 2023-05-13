@@ -9,8 +9,8 @@ import common.MessageListener;
 import common.MessageSource;
 
 /**
- * This class implements the client side of the Lobby. It is used to connect to the server
- * through the ConnectionAgent, and listens to messages from the server.  
+ * This class implements the client side of Pacman. It is used to connect to the server
+ * through a ConnectionAgent, and listens to messages from the server. 
  * @author Dillon Orr
  * @author Kevin Richardson
  * @version March 2023
@@ -39,8 +39,6 @@ public class PacmanClient extends MessageSource implements MessageListener {
             System.out.println(ioe.getMessage());
         }
     }
-    
-    
     
     /**
      * Method used to connect to the server

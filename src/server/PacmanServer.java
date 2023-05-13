@@ -17,6 +17,14 @@ import common.Movement;
 import common.TileMap;
 import common.TileValue;
 
+/**
+ * This class represents the server side of the Pacman game. It handles the game logic
+ * and synchronization by handling messages received from clients and broadcasting messages
+ * to all clients if necessary.
+ * @author Dillon Orr
+ * @version May 2023
+ */
+
 public class PacmanServer implements MessageListener {
 	// Constant that determines the maximum amount of players
 	private static final int MAXPLAYERS = 5;
@@ -51,8 +59,7 @@ public class PacmanServer implements MessageListener {
     // Boolean determinant for if the game is started
     private boolean gameStarted;
     // Boolean determinant for if the game is over
-    private boolean gameOver;
-    
+    private boolean gameOver;  
     /** */
     private ApiCommunicator apiTalker;
     
@@ -68,15 +75,13 @@ public class PacmanServer implements MessageListener {
      * @throws IOException 
      */
     public PacmanServer(int port, String instanceId) throws IOException {
-        //TODO
-        noApi = false;
-        
-        
+        noApi = false;  
     	this.serverSocket = new ServerSocket(port);
     	this.agents = new HashMap<>();
     	this.clientCharacterID = new HashMap<>();
     	this.clientScores = new HashMap<>();
     	this.clientReady = new HashMap<>();
+    	
     	this.stringPlayerList = new StringBuilder();
     	this.gameStarted = false;
     	this.agentsArrayList = new ArrayList<>();
@@ -87,7 +92,6 @@ public class PacmanServer implements MessageListener {
     	this.apiThread.start();
 
     	setupGame();
-
     }
     
     /**
@@ -111,11 +115,8 @@ public class PacmanServer implements MessageListener {
             	
             	if (agents.size() < MAXPLAYERS) {
             		if (!this.gameStarted) {
-	            		System.out.println("Game Started: " + this.gameStarted);
 	            		Socket socket = serverSocket.accept();
 	                    ConnectionAgent agent = new ConnectionAgent(socket);
-	                    
-	
 	                    agent.addMessageListener(this);
 	                    Thread serverThread = new Thread(agent);
 	                    serverThread.start();
@@ -125,10 +126,6 @@ public class PacmanServer implements MessageListener {
                 System.out.println(ioe.getMessage());
             }
         }
-    }
-    
-    private void setupPlayers() {
-        
     }
     
     /**
@@ -159,7 +156,7 @@ public class PacmanServer implements MessageListener {
 		}
 		// Get the ConnectionAgent of the client who sent the message
         ConnectionAgent clientAgent = (ConnectionAgent) source;
-     // Get the game character of the client who sent the message
+        // Get the game character of the client who sent the message
         int charID = -1;
         Characters clientCharacter = null;
         if(gotStartInformation && 
@@ -189,8 +186,6 @@ public class PacmanServer implements MessageListener {
         		direction = Movement.STILL;
         		broadcast("move:" + clientCharacter.getID() + " " + direction + " " + posY + " " + posX + " ");
         	}
-
-        	
         } else if (command.contains("pelletcollected") && 
         			clientCharacter.equals(Characters.PACMAN)) {
         	// If Pacman collects a pellet, update everyone's score
@@ -226,21 +221,18 @@ public class PacmanServer implements MessageListener {
 	    		broadcast("startgame:" + agents.size() + " " + this.currentPacLives + " ");
 	    	}
         } else if (command.contains("hitghost") && clientCharacter == Characters.PACMAN) {
-        	// !!!!! TODO: If the player is the last player, then the whole game is over
-        	// Broadcast that the 
+        	// Broadcast that the Pacman lost a life
         	broadcast("livelost:" + agents.get(clientAgent) + " ");
         	this.currentPacLives--;
         	this.pelletsEaten = 0;
         	
         	// If the current Pacman is out of lives, switch to the next player
-        	
     		if (this.currentPacLives == 0) {
     			// Broadcast the highscore of the Pacman player
     			broadcast("highscore:" + this.agentsArrayList.indexOf(clientAgent) + 
 																" " + this.score + " ");
         		this.clientScores.put(clientAgent, this.score);
         		this.score = 0;
-
     			if (isLastPlayer(clientAgent)) {
             		// If the player is the last Pacman, the game is over
     				String winner = getWinner();
@@ -253,9 +245,7 @@ public class PacmanServer implements MessageListener {
     				        this.apiTalker.addLoser(agent.getValue());
     				    }
     				}
-    				
     			} else {
-            		
             		// Hold for 5 seconds to give a break between rounds
             		try {
         				Thread.sleep(5000);
@@ -264,7 +254,6 @@ public class PacmanServer implements MessageListener {
         			}
             		changeTurn();
             		this.currentPacLives = this.STARTINGLIVES;
-            		
     				// Tell players to restart their game rendering with a new turn
                 	broadcast("newturn:" + this.STARTINGLIVES + " ");
     			}
@@ -275,12 +264,10 @@ public class PacmanServer implements MessageListener {
     			} catch (InterruptedException e) {
     				e.printStackTrace();
     			}
-        		
         		// Tell players to restart their game rendering
             	broadcast("continuegame:");
         	}
         } else if(command.contains("startInfo")) {
-            System.out.println("Found startInfo");
             setupGameInformation(messageArray, clientAgent);
         } else if(command.contains("gameoverclose")) {
             closeLogic(clientAgent);
@@ -299,32 +286,24 @@ public class PacmanServer implements MessageListener {
             if((!noApi) && this.apiTalker.gotStartInformation()) {
                 String[] players = this.apiTalker.getPlayers();
                 this.gotStartInformation = true;
-                
-                System.out.println("PLayers are " + players.length);
                 if(players.length > 0) {
-                    
                     if(apiTalker.getCode().contentEquals(code)) {
                         for(String names : players) {
                             if(names.contentEquals(clientsName)) {
                                 playerName = clientsName;
                             } else {
-                                System.out.println("Failed name test " + 
-                                        players.length);
+                                System.out.println("Failed name test " +  players.length);
                             }
                         }
                     } else {
                         System.out.println("Failed code test");
                     }
                 }
-                
                 if(playerName != null) {
-
                     givePlayerACharacter(playerName, clientAgent);
-                    
                 } else {
                     clientAgent.close();
                 }
-                
             } else {
                 playerName = "player" + agents.size();
                 givePlayerACharacter(playerName, clientAgent);
@@ -346,8 +325,6 @@ public class PacmanServer implements MessageListener {
         }
     }
     
-	
-	//TODO
 	private void givePlayerACharacter(String playerName, 
 	        ConnectionAgent clientAgent) {
         if (agents.size() == 0) {
@@ -360,7 +337,6 @@ public class PacmanServer implements MessageListener {
             this.stringPlayerList.append(" " + playerName);
         }
         // Tell all players to update their player list
-        System.out.println("Broadcasting new player");
         broadcast("newplayer:" + playerName);
 
         this.agents.put(clientAgent, playerName);
@@ -401,21 +377,18 @@ public class PacmanServer implements MessageListener {
 		ConnectionAgent lastAgent = this.agentsArrayList.get(this.agentsArrayList.size() - 1);
 		
 		if (clientAgent.equals(lastAgent)) {
-			System.out.println(this.agents.get(lastAgent) + " is the last player");
 			result = true;
 		}
-		
 		return result;
 	}
 
 	/**
-	 * Mtehod used when the current Pacman loses all of their lives, switching to the next player
+	 * Method used when the current Pacman loses all of their lives, switching to the next player
 	 */
 	private void changeTurn() {
 		for(Map.Entry<ConnectionAgent, Integer> entry : this.clientCharacterID.entrySet())     {
         	ConnectionAgent agent = entry.getKey();
         	// Get the new character's ID by doing [(current ID + 1) mod (number of players)]
-        	//int newCharacterID = (entry.getValue() - 1) % this.clientCharacterID.size();
         	int newCharacterID = Math.floorMod(entry.getValue() - 1, this.clientCharacterID.size());
         	entry.setValue(newCharacterID);
         	// Tell the client's their new character
@@ -473,7 +446,6 @@ public class PacmanServer implements MessageListener {
 		} else if (id == Movement.STILL.getValue()) {
 			movement = Movement.STILL;
 		} 
-		
 		return movement;
 	}
 	
@@ -484,7 +456,6 @@ public class PacmanServer implements MessageListener {
 	private int countPelletsInMap() {
 		int[][] map = tileMap.getMap();
 		int pellets = 0;
-		
 		for (int i = 1; i < map.length; i++) {
 			for (int j = 1; j < map[i].length; j++) {
 				if (map[i][j] == TileValue.PELLET.getValue()) {
@@ -492,7 +463,6 @@ public class PacmanServer implements MessageListener {
 				}
 			}
 		}
-		
 		return pellets;
 	}
 }

@@ -22,7 +22,9 @@ import javafx.scene.text.TextAlignment;
 import javafx.stage.Stage;
 
 /**
- * This is the main class for the Pacman game. 
+ * This is the main class for the single player Pacman game. This singleplayer version is far
+ * behind in updates from the multiplayer version, but was the initial environment for creating
+ * the Pacman game.
  * @author Kevin Richardson
  * @author Dillon Orr
  * @version March 2023
@@ -266,19 +268,19 @@ public class SetupGame extends Application {
         Movement currentDirection = pac.getDirection();
         Movement newDirection = Movement.STILL;
         if (input.contains(Movement.LEFT.getString())) {
-        	pac.moveToLeft("pac_left_25.png");
+        	//pac.moveToLeft("pac_left_25.png");
         	newDirection = Movement.LEFT;
         }
         else if (input.contains(Movement.RIGHT.getString())) {
-        	pac.moveToRight("pac_right_25.png");
+        	//pac.moveToRight("pac_right_25.png");
         	newDirection = Movement.RIGHT;
         }
         else if (input.contains(Movement.UP.getString())) {
-        	pac.moveToUp("pac_up_25.png");
+        	//ac.moveToUp("pac_up_25.png");
         	newDirection = Movement.UP;
         }
         else if (input.contains(Movement.DOWN.getString())) {
-        	pac.moveToDown("pac_down_25.png");
+        	//pac.moveToDown("pac_down_25.png");
         	newDirection = Movement.DOWN;
         }
         
@@ -327,13 +329,13 @@ public class SetupGame extends Application {
         	Movement newBlinkyDirection = blinky.decideMove(leftTileValue, rightTileValue, 
         													upTileValue, downTileValue);
         	if (newBlinkyDirection == Movement.LEFT) {
-        		blinky.moveToLeft("blinky_25.png");
+        		//blinky.moveToLeft("blinky_25.png");
         	} else if (newBlinkyDirection == Movement.RIGHT) {
-        		blinky.moveToRight("blinky_25.png");
+        		//blinky.moveToRight("blinky_25.png");
         	} else if (newBlinkyDirection == Movement.UP) {
-        		blinky.moveToUp("blinky_25.png");
+        		//blinky.moveToUp("blinky_25.png");
         	} else if (newBlinkyDirection == Movement.DOWN) {
-        		blinky.moveToDown("blinky_25.png");
+        		//blinky.moveToDown("blinky_25.png");
         	}
         }
     }

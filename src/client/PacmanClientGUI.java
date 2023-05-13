@@ -34,9 +34,18 @@ import javafx.scene.text.Font;
 import javafx.scene.text.TextAlignment;
 import javafx.stage.Stage;
 
+/**
+ * This class is the GUI that is used to display the Pacman game graphically. It is told
+ * messages that the client receives from the server, and updates the client-side game accordingly.
+ * @author Dillon Orr
+ * @version May 2023
+ */
+
 public class PacmanClientGUI extends Application implements ConsoleListener {
 	/** This constant represents the size of a square tile (width and height) */
 	private static final int TILESIZE = 20;
+	/** This constant is used to increase the height of the game window */
+	private final int HEIGHT_ADDITION = 150;
 	/** This holds the current score of Pacman */
 	private IntObject score;
 	/** This holds the current amount of lives of Pacman */
@@ -52,17 +61,17 @@ public class PacmanClientGUI extends Application implements ConsoleListener {
 	/** The Blinky game object */
 	private Ghost clyde;
 	/** An ArrayList of Ghosts in the game */
-    ArrayList<Ghost> ghosts;
+    private ArrayList<Ghost> ghosts;
 	/** An ArrayList of Pellets in the game */
-	ArrayList<Pellet> pelletList;
+	private ArrayList<Pellet> pelletList;
 	/** The TileMap of the game */
-	TileMap map;
+	private TileMap map;
     /** A player list ListView/VBox element */
-    PlayerList playerList;
+    private PlayerList playerList;
     /** A Button to indicate the player is ready */
-    Button readyButton;
+    private Button readyButton;
 	/** The stage of the screen */
-	Stage stage;
+	private Stage stage;
 	/** Boolean determinant for if the game is over */
 	boolean gameOver;
 	/** Boolean determinant for if the turn is over (one life = one turn) */
@@ -80,7 +89,7 @@ public class PacmanClientGUI extends Application implements ConsoleListener {
 	/** The maximum window width of the game */
 	private int maxWindowWidth;
 	/** The GraphicsContext that the game will be rendered on (characters, pellets, score, etc.) */
-	GraphicsContext gameGraphicsContext;
+	private GraphicsContext gameGraphicsContext;
 	/** The String of the player who won the game (retrieved when the server says game over) */
 	private String winnerName;
 	
@@ -92,23 +101,20 @@ public class PacmanClientGUI extends Application implements ConsoleListener {
     }
     
     /**
-     * 
+     * The initial method called when the screen starts
      */
 	@Override
 	public void start(Stage theStage) throws Exception {		
 		// !!! TODO: Add a screen/indicator for if the player is not connected to the server
 		this.stage = theStage;
-				
         // Tells the Pacman client to listen to this screen
         PacmanClientDriver.pacmanClient.setStreamListener(this);
-        
 		// Setting up Stage settings
 		stage.setTitle("Pac-Man");
-		this.maxWindowHeight = TILESIZE * TileMap.VERTICALTILES + 150;
+		// Added 150 to height due to the bottom being cut off
+		this.maxWindowHeight = TILESIZE * TileMap.VERTICALTILES + HEIGHT_ADDITION;
 		this.maxWindowWidth = TILESIZE * TileMap.HORIZONTALTILES;
-		
 		// !!! TODO: Change to scale resolution to monitor size?
-		// ! TODO: Added to HEIGHT due to bottom of game being cut off
         stage.setMaxHeight(maxWindowHeight);
         stage.setMinHeight(maxWindowHeight);
         stage.setMaxWidth(maxWindowWidth);
@@ -119,16 +125,15 @@ public class PacmanClientGUI extends Application implements ConsoleListener {
         // Set up the player ListView
         this.playerList = new PlayerList();
         root.setCenter(playerList);
-
         // Set up the ready Button
         this.readyButton = new Button("Ready");
         this.readyButton.setOnAction(buttonHandler);
         root.setBottom(readyButton);
         
+        // Sends a message to the server to get starting information
         PacmanClientDriver.doCommand("startInfo:" + 
                 PacmanClientDriver.getPlayerName() + ":" + 
                 PacmanClientDriver.getCode());
-        
         // Ask the server to send a list of current players
         PacmanClientDriver.doCommand("getplayerlist:");
         
@@ -137,8 +142,18 @@ public class PacmanClientGUI extends Application implements ConsoleListener {
 		scene.getStylesheets().add(getClass().getResource("application.css")
 				.toExternalForm());
         stage.setScene(scene);
+        // Input handling
+        setupInputHandlers(scene);
         
-        ArrayList<Integer> input = new ArrayList<Integer>();
+        stage.show();
+	}
+	
+	/** 
+	 * Setup the input handlers for when buttons are pressed or released
+	 * @param scene The scene where a button is pressed/released
+	 */
+	private void setupInputHandlers(Scene scene) {
+		ArrayList<Integer> input = new ArrayList<Integer>();
         // Handler for when a key is pressed 
         scene.setOnKeyPressed(
         	new EventHandler<KeyEvent>(){
@@ -154,7 +169,6 @@ public class PacmanClientGUI extends Application implements ConsoleListener {
         		}
         	}
     	);
-        
         // Handler for when a key is released
         scene.setOnKeyReleased(
         	new EventHandler<KeyEvent>() {
@@ -167,10 +181,8 @@ public class PacmanClientGUI extends Application implements ConsoleListener {
         		}
         	}
 		);
-        
-        stage.show();
 	}
-	
+
 	/**
 	 * Method used to send the client character's location to the server
 	 * @param character The GameCharacter to send movement of (need tile position)
@@ -179,11 +191,8 @@ public class PacmanClientGUI extends Application implements ConsoleListener {
 	private void sendMovement(GameCharacter character, int directionCode) {   
 		// Reset the desired direction
 		desiredDirection = Movement.STILL;
-
     	int[] tilePosition = getCharacterLocation(character);
-        
-    	System.out.println("Sending movement: " + directionCode);
-    	
+    	// Send a command with the direction code and y-x position
         PacmanClientDriver.doCommand("move:" + directionCode + " " + 
 				tilePosition[TileMap.YCOORDINATE] + " " + 
         		tilePosition[TileMap.XCOORDINATE] + " ");
@@ -196,7 +205,6 @@ public class PacmanClientGUI extends Application implements ConsoleListener {
 	private GameCharacter getCurrentGameCharacter() {
 		GameCharacter gameChar = null;
 		
-		System.out.println("Getting current game character, currentChar is: " + this.currentChar);
 		switch(this.currentChar) {
 		case PACMAN:
 			gameChar = this.pac;
@@ -214,7 +222,6 @@ public class PacmanClientGUI extends Application implements ConsoleListener {
 			gameChar = this.clyde;
 			break;
 		}
-		
 		return gameChar;
 	}
 	
@@ -229,8 +236,7 @@ public class PacmanClientGUI extends Application implements ConsoleListener {
             if (btn == readyButton) {
             	// Send the server a message saying that you are ready
             	PacmanClientDriver.doCommand("ready:");
-            	// !! TODO: Disabling the button after readying for now
-            	// Should we allow un-readying?
+            	// !! TODO: Disabling the button after readying - should we allow un-readying?
             	readyButton.setDisable(true);
             }
         }
@@ -249,15 +255,16 @@ public class PacmanClientGUI extends Application implements ConsoleListener {
 		if (messageArray.length > 1) {
 			options = messageArray[1];
 		}
-		
 		// Interpret commands sent from the server
 		if (command.contains("newplayerlist")) {
+			// Command received when a new player joins and gets a player list
 			// Split the player names by spaces
 			String[] playersArray = options.split(" ");
 			for (String playerName : playersArray) {
 				this.playerList.addPlayer(playerName);
 			}
 		} else if (command.contains("newplayer")) {
+			// Command received when a new player joins
 			System.out.println("Adding player: " + options);
 			
 			Platform.runLater(new Runnable() {
@@ -267,9 +274,11 @@ public class PacmanClientGUI extends Application implements ConsoleListener {
 				}
 			});
 		} else if (command.contains("removeplayer")) {
+			// Command received when a player is removed
 			this.playerList.removePlayer(options);
 			
 		} else if (command.contains("move")) {
+			// Command received when a character moves
 			String[] moveArray = options.split(" ");
 			// moveArray[0] is the ID of the character that is being moved
 			int charID = Integer.parseInt(moveArray[0]);
@@ -306,6 +315,7 @@ public class PacmanClientGUI extends Application implements ConsoleListener {
 			}
 			
 		} else if (command.contains("pelletcollected")) {
+			// Command received when a pellet is collected
 			// Update the current score
 			score.increment();
 			// Update using the given index of the pellet 
@@ -329,7 +339,6 @@ public class PacmanClientGUI extends Application implements ConsoleListener {
 	        // Number of ghosts is number of players - Pacman
 			initializeGhosts(numPlayers);
 			this.turnNumber = 0;
-
 			// Begin the game animation loop
 			Platform.runLater(new Runnable() {
 				@Override
@@ -513,19 +522,17 @@ public class PacmanClientGUI extends Application implements ConsoleListener {
 	 * Method used to setup player card images based on the turn number
 	 */
 	private void setPlayerCardImages() {
-        // [turn number] is the index of the current Pacman player
+        // The turn number is the index of the current Pacman player
 		// On turn number 0: player0:pacman(0), 	player1:blinky(1), 	player2:pinky(2)
 		// On turn number 1: player0:pinky(2), 		player1:pacman(0), 	player2:blinky(1)
 		// On turn number 2: player0:blinky(1), 	player1:pinky(2), 	player2:pacman(0)
         int playerNumber = 0;
         for (PlayerCard playerCard : this.playerCards) {
-        	// (2 - 0) % 3 = 2
+			// Get the new character ID by using the mod operator on current ID
             int playerCardCharID = Math.floorMod(playerNumber - this.turnNumber, this.playerCards.size());
-			// Get the character image name by using mod operator on current ID
 			String characterImgName = Characters
 					.getCharacterUsingID(playerCardCharID).getName();
 			playerCard.setImage(characterImgName);
-			
 			playerNumber++;
 		}
 	}
@@ -565,7 +572,6 @@ public class PacmanClientGUI extends Application implements ConsoleListener {
 	 */
 	private void gameRenderLoop(GraphicsContext gc) {
 		this.pac = new Pacman();
-		
 		// Clear the GraphicsContext
         gc.clearRect(0, 0, TILESIZE * TileMap.HORIZONTALTILES, TILESIZE * TileMap.VERTICALTILES);
     	this.initializePositions();
@@ -575,38 +581,35 @@ public class PacmanClientGUI extends Application implements ConsoleListener {
     	LongObject lastNanoTime = new LongObject(0);
         
     	// Start the animation rendering timer
-    	AnimationTimer animTimer = new AnimationTimer() { 
+    	AnimationTimer animTimer = new AnimationTimer() {
+    		// The number of frames to pass before changing Pacman's image to show animation
+    		private final int FRAMES_BETWEEN_ANIMATION = 3;
     		// Used to count frames and change the images of sprites
-        	int frameCounter = 0;
+        	private int frameCounter = 0;
         	// If Pacman has hit a ghost (ensures no double hits)
-            boolean hitGhost = false;
-
-
-            public void handle(long currentNanoTime)
-            {
-                // calculate time since last update.
-                double elapsedTime = (currentNanoTime - lastNanoTime.value) / 1000000000.0;
-                
-                // !!!!! TODO: REMOVE MAGIC NUMBERS
-                
+            private boolean hitGhost = false;
+            
+            public void handle(long currentNanoTime) {
+                // Calculate time since last update
+                double elapsedTime = (currentNanoTime - lastNanoTime.value) / 1000000000.0;   
                 // Handle Pacman animation frames
                 if (pac.getDirection() != Movement.STILL) {
                 	// If Pacman is not standing still, update frame counter
                     frameCounter++;
-                    if (frameCounter/3 == 4) {
+                    if (frameCounter/FRAMES_BETWEEN_ANIMATION == 4) {
                     	// Frame 4 is the same as frame 2 for Pacman
                     	pac.setImageFrame(2);
                     	// Reset frame counter when all frames are reached (4 total)
                     	this.frameCounter = 0;
                     } else {
-                    	if (frameCounter % 3 == 0 && frameCounter != 0) {
-                        	pac.setImageFrame(frameCounter/3);
+                    	if (frameCounter % FRAMES_BETWEEN_ANIMATION == 0 && frameCounter != 0) {
+                        	pac.setImageFrame(frameCounter/FRAMES_BETWEEN_ANIMATION);
                     	}
                     }
-
                 }
-                
+                // The last update time is now set to the current time
                 lastNanoTime.value = currentNanoTime;
+                
                 // Handle player movement in a separate method
                 movementHandler();
                 // Update game characters
@@ -616,6 +619,7 @@ public class PacmanClientGUI extends Application implements ConsoleListener {
                 	Ghost currentGhost = ghostUpdIter.next();
                     currentGhost.update(elapsedTime);
                 }
+                
                 // Render the game objects
                 gc.clearRect(0, 0, TILESIZE * TileMap.HORIZONTALTILES, TILESIZE * TileMap.VERTICALTILES);
                 for (Sprite pellet : pelletList )
@@ -627,7 +631,7 @@ public class PacmanClientGUI extends Application implements ConsoleListener {
                 	currentGhost.render(gc);
                 }
                 
-                // Client-side Pacman collision detection
+                // Client-side Pacman collision detection (only if the player is Pacman)
                 if (currentChar == Characters.PACMAN && !hitGhost) {
                 	// Checking if Pacman hit a ghost
                 	Iterator<Ghost> ghostsIter = ghosts.iterator();
@@ -663,11 +667,7 @@ public class PacmanClientGUI extends Application implements ConsoleListener {
                 String livesText = "Lives: " + lives.getValue();
                 gc.fillText( livesText, 160, 15);
                 gc.strokeText( livesText, 160, 15);
-                
-                // !!! TODO: Update when cycling to next player?
-                // !!! TODO: Update if/when lives are added?
-                // !!! TODO: Update with player name
-                
+                                
                 if (turnOver) {
                 	String turnPacName = getTurnPacmanName();
                 	String displayString = turnPacName + " LOST A LIFE";
@@ -691,10 +691,7 @@ public class PacmanClientGUI extends Application implements ConsoleListener {
                 	// Stop the rendering loop
                 	this.stop();
                 }
-            }
-
-
-			
+            }			
         };
         animTimer.start();
 	}
@@ -737,16 +734,13 @@ public class PacmanClientGUI extends Application implements ConsoleListener {
 		
 		int[] charPosition = getCharacterLocation(gameChar);   
         Movement currentDirection = gameChar.getDirection();
-		// If desired direction works, use it
         if (map.nextTileValue(charPosition, desiredDirection) != TileValue.WALL.getValue()
 				&& desiredDirection != Movement.STILL
 				&& desiredDirection != gameChar.getDirection()) {
-        	
-			
+        	// If character can use the desired direction, then do so
             sendMovement(gameChar, desiredDirection.getValue());
 		} else if (map.nextTileValue(charPosition, currentDirection) == TileValue.WALL.getValue()
 				&& currentDirection != Movement.STILL) {
-			
             // If character is about to hit a wall and not staying still, stay still
     		sendMovement(gameChar, Movement.STILL.getValue());
     	}
@@ -786,7 +780,6 @@ public class PacmanClientGUI extends Application implements ConsoleListener {
 				}
 			}	
 		};
-		
 		regenThread.start();
 	}
 	

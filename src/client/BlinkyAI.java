@@ -7,11 +7,12 @@ import common.Movement;
 import common.TileValue;
 
 /**
- * This class represents an AI for the ghost to manuever around the map
+ * This class is an AI for a ghost that randomly moves around a TileMap.
  * @author Dillon Orr
- *
+ * @version March 2023
  */
 public class BlinkyAI extends Ghost {
+	
 	/**
 	 * Constructor for a BlinkyAI object
 	 */
@@ -54,13 +55,4 @@ public class BlinkyAI extends Ghost {
 		int randomIndex = random.nextInt(possibleMoves.size());
 		return possibleMoves.get(randomIndex);
 	}
-	
-	/**
-	 * Method used to check moves available to the ghost
-	 * @param position
-	 */
-	public void checkForMove(int[] position) {
-		
-	}
-
 }

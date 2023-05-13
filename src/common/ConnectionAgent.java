@@ -8,7 +8,7 @@ import java.io.PrintStream;
 /**
  * The class is responsible for sending messages and receiving messages from remote hosts.
  * @author Fernando Rodriguez 
- * @author Dillon Torr 
+ * @author Dillon Orr 
  * @version Decemeber 2021 
  */
 public class ConnectionAgent extends MessageSource implements Runnable {

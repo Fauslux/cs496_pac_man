@@ -1,7 +1,7 @@
 package common;
 
 /**
- * This enumeration is used to determine which specific character is assigned to what player.
+ * This enumeration is used for characters in the Pacman game.
  * @author Dillon Orr
  * @version March 2023
  */
@@ -62,7 +62,6 @@ public enum Characters {
 		} else if (id == Characters.CLYDE.getID()) {
 			clientCharacter = Characters.CLYDE;
 		}
-				
 		return clientCharacter;
 	}
 	

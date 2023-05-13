@@ -27,7 +27,6 @@ public class PlayerList extends VBox {
      * Initial method used to set up GUI elements
      */
 	public void setup() {
-		Label playersLabel = new Label("Players:");
         ListView<String> playerList = new ListView<String>();
         playerStrings = FXCollections.observableArrayList();
         playerList.setItems(playerStrings);
